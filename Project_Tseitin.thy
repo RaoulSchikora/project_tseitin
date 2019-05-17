@@ -33,10 +33,13 @@ to a given truth assignment \<open>\<alpha> :: 'a \<Rightarrow>bool\<close>.
 \<close>
 fun eval :: "('a \<Rightarrow> bool) \<Rightarrow> 'a form \<Rightarrow> bool"
   where
-    "eval \<alpha> \<phi> = undefined"
+    "eval _ Bot = False"
+  | "eval \<alpha> (Atm p) = \<alpha> p"
+  | "eval \<alpha> (Neg \<phi>) = (\<not>eval \<alpha> \<phi>)"
+  | "eval \<alpha> (Imp \<phi> \<psi>) = ((\<not>eval \<alpha> \<phi>) \<or> eval \<alpha> \<psi>)"
 
 text \<open>
-Define a predicate \<open>sat\<close> the captures satisfiable formulas.
+Define a predicate \<open>sat\<close> that captures satisfiable formulas.
 \<close>
 definition sat :: "'a form \<Rightarrow> bool"
   where
