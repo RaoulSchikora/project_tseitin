@@ -54,9 +54,26 @@ Literals are positive or negative atoms.
 datatype 'a literal = P 'a | N 'a
 
 text \<open>
+Function that turns a given literal into its given atom
+\<close>
+fun of_literal :: "'a literal \<Rightarrow> 'a form"
+  where
+    "of_literal (P p) = Atm p"
+  | "of_literal (N p) = Neg (Atm p)"
+
+text \<open>
 A clause is a disjunction of literals, represented as a list of literals.
 \<close>
 type_synonym 'a clause = "'a literal list"
+
+text \<open>
+Function that turns a given clause into an equivallent formula (of @{typ "'a form"}
+\<close>
+fun of_clause :: "'a clause \<Rightarrow> 'a form"
+  where
+    "of_clause [] = Bot"
+  | "of_clause (Cons c []) = of_literal c"
+  | "of_clause (Cons c cs) = Imp (Neg (of_literal c)) (of_clause cs)"
 
 text \<open>
 A CNF is a conjunction of clauses, represented as list of clauses.
@@ -70,7 +87,9 @@ a logically equivalent formula (of @{typ "'a form"}).
 
 fun of_cnf :: "'a cnf \<Rightarrow> 'a form"
   where
-    "of_cnf cs = undefined"
+    "of_cnf [] = Neg (of_clause [])"
+  | "of_cnf (Cons c []) = of_clause c"
+  | "of_cnf (Cons c cs) = Neg (Imp (of_clause c) (of_cnf cs))"
 
 
 subsection \<open>Tseitin Transformation\<close>
