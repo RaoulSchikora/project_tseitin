@@ -43,7 +43,7 @@ Define a predicate \<open>sat\<close> that captures satisfiable formulas.
 \<close>
 definition sat :: "'a form \<Rightarrow> bool"
   where
-    "sat \<phi> \<longleftrightarrow> undefined"
+    "sat \<phi> \<longleftrightarrow> (\<exists>\<alpha>. eval \<alpha> \<phi> = True)"
 
 
 subsection \<open>Conjunctive Normal Forms\<close>
