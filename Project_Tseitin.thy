@@ -54,7 +54,8 @@ Literals are positive or negative atoms.
 datatype 'a literal = P 'a | N 'a
 
 text \<open>
-Function that turns a given literal into its given atom
+Function \<open>of_literals\<close> that turns a given literal (of {@typ "'a literal"}) into 
+the corresponding \<open>'a form\<close>
 \<close>
 fun of_literal :: "'a literal \<Rightarrow> 'a form"
   where
@@ -67,7 +68,8 @@ A clause is a disjunction of literals, represented as a list of literals.
 type_synonym 'a clause = "'a literal list"
 
 text \<open>
-Function that turns a given clause into an equivallent formula (of @{typ "'a form"}
+Function \<open>of_clause\<close> that turns a given clause (of @{typ "'a clause"}) into an 
+equivalent formula (of @{typ "'a form"})
 \<close>
 fun of_clause :: "'a clause \<Rightarrow> 'a form"
   where
