@@ -74,8 +74,8 @@ equivalent formula (of @{typ "'a form"}).
 fun of_clause :: "'a clause \<Rightarrow> 'a form"
   where
     "of_clause [] = Bot"
-  | "of_clause (Cons c []) = of_literal c"
-  | "of_clause (Cons c cs) = Imp (Neg (of_literal c)) (of_clause cs)"
+  | "of_clause (c # []) = of_literal c"
+  | "of_clause (c # cs) = Imp (Neg (of_literal c)) (of_clause cs)"
 
 text \<open>
 A CNF is a conjunction of clauses, represented as list of clauses.
@@ -90,8 +90,8 @@ a logically equivalent formula (of @{typ "'a form"}).
 fun of_cnf :: "'a cnf \<Rightarrow> 'a form"
   where
     "of_cnf [] = Neg (of_clause [])"
-  | "of_cnf (Cons c []) = of_clause c"
-  | "of_cnf (Cons c cs) = Neg (Imp (of_clause c) (of_cnf cs))"
+  | "of_cnf (c # []) = of_clause c"
+  | "of_cnf (c # cs) = Neg (Imp (of_clause c) (of_cnf cs))"
 
 
 subsection \<open>Tseitin Transformation\<close>
@@ -108,11 +108,14 @@ to recursively compute clauses \<open>tseitin \<phi>\<close> such that \<open>a\
 are equisatisfiable (that is, the former is satisfiable iff the latter is).
 
 Define a function \<open>tseitin\<close> that computes the clauses corresponding to the above idea.
-\<close>
-
+\<close>           
 fun tseitin :: "'a form \<Rightarrow> ('a form) cnf"
   where
-    "tseitin \<phi> = undefined"
+    "tseitin (Bot) = [[(P Bot)]]"
+  | "tseitin (Atm \<phi>) = []"
+  | "tseitin (Neg \<phi>) = [(N (Neg \<phi>)), (N \<phi>)] # ([(P (Neg \<phi>)), (P \<phi>)] # tseitin \<phi>)"
+  | "tseitin (Imp \<phi> \<psi>) = [(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)] # ([(P (Imp \<phi> \<psi>)), (P \<phi>)] 
+                         # ([(N \<psi>), (P (Imp \<phi> \<psi>))] # (tseitin \<phi> @ tseitin \<psi>)))"
 
 text \<open>
 Prove that \<open>a\<^sub>\<phi> \<and> tseitin \<phi>\<close> and \<open>\<phi>\<close> are equisatisfiable.
