@@ -54,8 +54,8 @@ Literals are positive or negative atoms.
 datatype 'a literal = P 'a | N 'a
 
 text \<open>
-Function \<open>of_literals\<close> that turns a given literal (of {@typ "'a literal"}) into 
-the corresponding \<open>'a form\<close>
+Function \<open>of_literals\<close> that turns a given literal (of @{typ "'a literal"}) into 
+the corresponding formula (of @{typ "'a form"}).
 \<close>
 fun of_literal :: "'a literal \<Rightarrow> 'a form"
   where
@@ -69,7 +69,7 @@ type_synonym 'a clause = "'a literal list"
 
 text \<open>
 Function \<open>of_clause\<close> that turns a given clause (of @{typ "'a clause"}) into an 
-equivalent formula (of @{typ "'a form"})
+equivalent formula (of @{typ "'a form"}).
 \<close>
 fun of_clause :: "'a clause \<Rightarrow> 'a form"
   where
@@ -83,7 +83,7 @@ A CNF is a conjunction of clauses, represented as list of clauses.
 type_synonym 'a cnf = "'a clause list"
 
 text \<open>
-Implement a function \<open>of_cnf\<close> that, given a CNF (of @{typ "'a cnf"}, computes
+Implement a function \<open>of_cnf\<close> that, given a CNF (of @{typ "'a cnf"}), computes
 a logically equivalent formula (of @{typ "'a form"}).
 \<close>
 
@@ -115,7 +115,7 @@ fun tseitin :: "'a form \<Rightarrow> ('a form) cnf"
     "tseitin \<phi> = undefined"
 
 text \<open>
-Prove that \<open>a\<^sub>\<phi> \<and> tseitin \<phi>\<close> are equisatisfiable.
+Prove that \<open>a\<^sub>\<phi> \<and> tseitin \<phi>\<close> and \<open>\<phi>\<close> are equisatisfiable.
 \<close>
 
 lemma tseitin_equisat:
