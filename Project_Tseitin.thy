@@ -91,7 +91,7 @@ fun of_cnf :: "'a cnf \<Rightarrow> 'a form"
   where
     "of_cnf [] = Neg (of_clause [])"
   | "of_cnf (c # []) = of_clause c"
-  | "of_cnf (c # cs) = Neg (Imp (of_clause c) (of_cnf cs))"
+  | "of_cnf (c # cs) = Neg (Imp (of_clause c) (Neg (of_cnf cs)))"
 
 
 subsection \<open>Tseitin Transformation\<close>
