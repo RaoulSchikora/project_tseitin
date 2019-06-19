@@ -35,8 +35,9 @@ fun eval :: "('a \<Rightarrow> bool) \<Rightarrow> 'a form \<Rightarrow> bool"
   where
     "eval _ Bot = False"
   | "eval \<alpha> (Atm p) = \<alpha> p"
-  | "eval \<alpha> (Neg \<phi>) = (\<not>eval \<alpha> \<phi>)"
-  | "eval \<alpha> (Imp \<phi> \<psi>) = ((\<not>eval \<alpha> \<phi>) \<or> eval \<alpha> \<psi>)"
+  | "eval \<alpha> (Neg \<phi>) = (\<not>(eval \<alpha> \<phi>))"
+  | "eval \<alpha> (Imp \<phi> \<psi>) = ((\<not>(eval \<alpha> \<phi>)) \<or> eval \<alpha> \<psi>)"
+print_theorems
 
 text \<open>
 Define a predicate \<open>sat\<close> that captures satisfiable formulas.
@@ -74,7 +75,6 @@ equivalent formula (of @{typ "'a form"}).
 fun of_clause :: "'a clause \<Rightarrow> 'a form"
   where
     "of_clause [] = Bot"
-  | "of_clause (c # []) = of_literal c"
   | "of_clause (c # cs) = Imp (Neg (of_literal c)) (of_clause cs)"
 
 text \<open>
@@ -89,9 +89,9 @@ a logically equivalent formula (of @{typ "'a form"}).
 
 fun of_cnf :: "'a cnf \<Rightarrow> 'a form"
   where
-    "of_cnf [] = Neg (of_clause [])"
-  | "of_cnf (c # []) = of_clause c"
+    "of_cnf [] = Neg Bot"
   | "of_cnf (c # cs) = Neg (Imp (of_clause c) (Neg (of_cnf cs)))"
+print_theorems
 
 
 subsection \<open>Tseitin Transformation\<close>
@@ -111,20 +111,50 @@ Define a function \<open>tseitin\<close> that computes the clauses corresponding
 \<close>           
 fun tseitin :: "'a form \<Rightarrow> ('a form) cnf"
   where
-    "tseitin (Bot) = [[(P Bot)]]"
+    "tseitin (Bot) = [[N Bot]]"
   | "tseitin (Atm \<phi>) = []"
-  | "tseitin (Neg \<phi>) = [(N (Neg \<phi>)), (N \<phi>)] # ([(P (Neg \<phi>)), (P \<phi>)] # tseitin \<phi>)"
-  | "tseitin (Imp \<phi> \<psi>) = [(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)] # ([(P (Imp \<phi> \<psi>)), (P \<phi>)] 
-                         # ([(N \<psi>), (P (Imp \<phi> \<psi>))] # (tseitin \<phi> @ tseitin \<psi>)))"
+  | "tseitin (Neg \<phi>) = [(N (Neg \<phi>)), (N \<phi>)] # [(P (Neg \<phi>)), (P \<phi>)] # tseitin \<phi>"
+  | "tseitin (Imp \<phi> \<psi>) = [(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)] # [(P (Imp \<phi> \<psi>)), (P \<phi>)] 
+                         # [(N \<psi>), (P (Imp \<phi> \<psi>))] # (tseitin \<phi> @ tseitin \<psi>)"
+
+lemma [simp]: "eval \<alpha> (of_cnf (xs @ ys)) = (eval \<alpha> (of_cnf xs) \<and> eval \<alpha> (of_cnf ys))"
+  by (induction xs) auto
+
+lemma [simp]: "eval (eval \<alpha>) (of_cnf(tseitin \<phi>))"
+  by (induction \<phi>) auto
+
+(*(\<lambda>x. True)*)
+value "eval (\<lambda>x. True) (of_cnf (tseitin (Imp \<phi> \<psi>)))"
+
+lemma "eval \<alpha> \<phi> \<Longrightarrow> eval (eval \<alpha>) (of_cnf ([P \<phi>] # tseitin \<phi>))"
+  by auto
+
+(*insert type that fits for b*)
+lemma "eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>)) \<Longrightarrow> eval b \<phi>"
+  sorry
+
+lemma equalitiy:
+  "eval \<alpha> \<phi> \<Longrightarrow> \<alpha> \<phi> \<and> eval \<alpha> (of_cnf (tseitin \<phi>))"
+  by auto
 
 text \<open>
 Prove that \<open>a\<^sub>\<phi> \<and> tseitin \<phi>\<close> and \<open>\<phi>\<close> are equisatisfiable.
 \<close>
-
 lemma tseitin_equisat:
   "sat (of_cnf ([P \<phi>] # tseitin \<phi>)) \<longleftrightarrow> sat \<phi>"
-  sorry
-
+proof
+  assume "sat (of_cnf ([P \<phi>] # tseitin \<phi>))"
+  from \<open>sat (of_cnf ([P \<phi>] # tseitin \<phi>))\<close> 
+  have "\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>)) = True"
+    by (simp add: sat_def)
+  show "sat \<phi>"
+  proof (rule ccontr)
+    assume "\<not>sat \<phi>"
+    from \<open>\<not>sat \<phi>\<close> have "\<forall>\<alpha>. eval \<alpha> \<phi> = False" by (simp add: sat_def)
+    from \<open>\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>)) = True\<close> 
+    have "\<exists>\<alpha>. (\<alpha> \<phi> \<and> eval \<alpha> (of_cnf (tseitin \<phi>))) = True"
+      sorry
+  
 text \<open>
 Prove linear bounds on the number of clauses and literals by suitably
 replacing \<open>n\<close> and \<open>num_literals\<close> below:
