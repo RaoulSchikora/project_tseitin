@@ -117,6 +117,7 @@ fun tseitin :: "'a form \<Rightarrow> ('a form) cnf"
   | "tseitin (Neg \<phi>) = [(N (Neg \<phi>)), (N \<phi>)] # [(P (Neg \<phi>)), (P \<phi>)] # tseitin \<phi>"
   | "tseitin (Imp \<phi> \<psi>) = [(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)] # [(P (Imp \<phi> \<psi>)), (P \<phi>)] 
                          # [(N \<psi>), (P (Imp \<phi> \<psi>))] # (tseitin \<phi> @ tseitin \<psi>)"
+print_theorems
 
 text \<open>
 Prove several lemmas on the way to the important prove of equisatisfiability between
@@ -175,14 +176,38 @@ next
     then show ?thesis by (simp add: sat_def)
   qed
 qed
-  
+
 text \<open>
 Prove linear bounds on the number of clauses and literals by suitably
 replacing \<open>n\<close> and \<open>num_literals\<close> below:
 \<close>
 lemma tseitin_num_clauses:
-  "length (tseitin \<phi>) \<le> n * size \<phi>"
-  sorry
+  "length (tseitin \<phi>) \<le> 3 * size \<phi>"
+proof (induction \<phi> rule: tseitin.induct)
+  case IH: 1
+  then show ?case by auto
+next
+  case IH: (2 \<phi>)
+  have "length (tseitin (Atm \<phi>)) = 0" 
+    by auto
+  then have "length (tseitin (Atm \<phi>)) \<le> 3 * size (Atm \<phi>)" 
+    using IH by auto
+  then show ?case by auto
+next
+  case IH: (3 \<phi>)
+  have "length (tseitin (Neg \<phi>)) = 2 + length (tseitin \<phi>)" 
+    by auto
+  then have "length (tseitin (Neg \<phi>)) \<le> 3 * (1 + size \<phi>)" 
+    using IH by auto
+  then show ?case by auto
+next
+  case IH: (4 \<phi> \<psi>)
+  have "length (tseitin (Imp \<phi> \<psi>)) = 3 + length (tseitin \<phi>) + length (tseitin \<psi>)"
+    by auto
+  then have "length (tseitin (Imp \<phi> \<psi>)) \<le> 3 * (1 + size \<phi> + size \<psi>)" 
+    using IH by auto
+  then show ?case by auto
+qed
 
 lemma tseitin_num_literals:
   "num_literals (tseitin \<phi>) \<le> n * size \<phi>"
