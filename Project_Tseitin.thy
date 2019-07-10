@@ -131,7 +131,7 @@ lemma [simp]: "eval (eval \<alpha>) (of_cnf(tseitin \<phi>))"
 lemma [simp]: "eval \<alpha> \<phi> \<Longrightarrow> eval (eval \<alpha>) (of_cnf ([P \<phi>] # tseitin \<phi>))"
   by auto
 
-lemma tseitin_consistent:
+lemma tseitin_consistent [simp]:
   assumes "eval v (of_cnf(tseitin \<phi>))"
   shows "eval (v \<circ> Atm) \<phi> = v \<phi>"
 proof (rule iffI)
@@ -144,28 +144,8 @@ next
     sorry
 qed
 
-(*lemma [simp]: "eval \<alpha> (Atm \<phi>) = eval (\<alpha> \<circ> Atm) \<phi>"
-
-(* try out *)
-lemma "eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>)) \<Longrightarrow> eval (\<alpha> \<circ> Atm) \<phi>"
-proof -
-  assume "eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>))"
-  from \<open>eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>))\<close>
-  have "eval \<alpha> (of_cnf [[P \<phi>]]) \<and> eval \<alpha> (of_cnf(tseitin \<phi>))" by auto
-  then have "eval \<alpha> (of_cnf [[P \<phi>]])" by auto
-  then have "eval \<alpha> (Atm \<phi>)" by auto
-  then have "\<alpha> \<phi>" by auto
-  show ?thesis
-  qed
-
-lemma equalitiy:
-  "eval \<alpha> \<phi> \<Longrightarrow> \<alpha> \<phi> \<and> eval \<alpha> (of_cnf (tseitin \<phi>))"
-  by auto
-
 (*(\<lambda>x. True)*)
 value "eval (\<lambda>x. True) (of_cnf (tseitin (Imp \<phi> \<psi>)))"
-  *)
-
 
 text \<open>
 Prove that \<open>a\<^sub>\<phi> \<and> tseitin \<phi>\<close> and \<open>\<phi>\<close> are equisatisfiable.
@@ -180,7 +160,7 @@ proof (rule iffI)
     have "\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>))" by (simp add: sat_def)
     then have "\<exists>\<alpha>. (\<alpha> \<phi>) \<and> eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>))" by auto
     then obtain \<alpha> where "\<alpha> \<phi>" and "eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>))" by auto
-    then have "eval (\<alpha> \<circ> Atm) \<phi>" by (simp add: tseitin_consistent)
+    then have "eval (\<alpha> \<circ> Atm) \<phi>" by auto
     then have "\<exists>\<beta>. eval \<beta> \<phi>" by auto
     then show ?thesis by (simp add: sat_def)
   qed
@@ -195,37 +175,6 @@ next
     then show ?thesis by (simp add: sat_def)
   qed
 qed
-
-(*
-  assume "sat \<phi>"
-  from \<open>sat \<phi>\<close>
-  have "\<exists>\<alpha>. eval \<alpha> \<phi>" by (simp add: sat_def)
-  then have "\<exists>\<alpha>. eval (eval \<alpha>) (of_cnf ([P \<phi>] # tseitin \<phi>))" by auto
-  then have "\<exists>\<beta>. eval \<beta> (of_cnf ([P \<phi>] # tseitin \<phi>))" by auto
-  then have "sat (of_cnf ([P \<phi>] # tseitin \<phi>))" by (simp add: sat_def)
-next
-*)
-
-    
-    (*from \<open>\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>))\<close>
-    have "\<exists>\<alpha>. (\<alpha> \<phi> \<and> eval \<alpha> (of_cnf (tseitin \<phi>)))"*)
-  
-  (*assume "sat (of_cnf ([P \<phi>] # tseitin \<phi>))"
-  from \<open>sat (of_cnf ([P \<phi>] # tseitin \<phi>))\<close>
-  have "\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>))" by (simp add: sat_def)
-  then have "\<exists>\<alpha>. eval \<alpha> (Atm \<phi>)" by auto
-  *)
-  
-  (*from \<open>sat (of_cnf ([P \<phi>] # tseitin \<phi>))\<close>
-  have "\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>)) = True"
-    by (simp add: sat_def)
-  show "sat \<phi>"
-  proof (rule ccontr)
-    assume "\<not>sat \<phi>"
-    from \<open>\<not>sat \<phi>\<close> have "\<forall>\<alpha>. eval \<alpha> \<phi> = False" by (simp add: sat_def)
-    from \<open>\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>)) = True\<close> 
-    have "\<exists>\<alpha>. (\<alpha> \<phi> \<and> eval \<alpha> (of_cnf (tseitin \<phi>))) = True"
-      sorry*)
   
 text \<open>
 Prove linear bounds on the number of clauses and literals by suitably
