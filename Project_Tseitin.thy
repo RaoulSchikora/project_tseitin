@@ -44,7 +44,7 @@ Define a predicate \<open>sat\<close> that captures satisfiable formulas.
 \<close>
 definition sat :: "'a form \<Rightarrow> bool"
   where
-    "sat \<phi> \<longleftrightarrow> (\<exists>\<alpha>. eval \<alpha> \<phi> = True)"
+    "sat \<phi> \<longleftrightarrow> (\<exists>\<alpha>. eval \<alpha> \<phi>)"
 
 
 subsection \<open>Conjunctive Normal Forms\<close>
@@ -76,6 +76,7 @@ fun of_clause :: "'a clause \<Rightarrow> 'a form"
   where
     "of_clause [] = Bot"
   | "of_clause (c # cs) = Imp (Neg (of_literal c)) (of_clause cs)"
+print_theorems
 
 text \<open>
 A CNF is a conjunction of clauses, represented as list of clauses.
@@ -117,34 +118,104 @@ fun tseitin :: "'a form \<Rightarrow> ('a form) cnf"
   | "tseitin (Imp \<phi> \<psi>) = [(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)] # [(P (Imp \<phi> \<psi>)), (P \<phi>)] 
                          # [(N \<psi>), (P (Imp \<phi> \<psi>))] # (tseitin \<phi> @ tseitin \<psi>)"
 
+text \<open>
+Prove several lemmas on the way to the important prove of equisatisfiability between
+the function \<phi> and its tseitin transformation.
+\<close>
 lemma [simp]: "eval \<alpha> (of_cnf (xs @ ys)) = (eval \<alpha> (of_cnf xs) \<and> eval \<alpha> (of_cnf ys))"
   by (induction xs) auto
 
 lemma [simp]: "eval (eval \<alpha>) (of_cnf(tseitin \<phi>))"
   by (induction \<phi>) auto
 
-(*(\<lambda>x. True)*)
-value "eval (\<lambda>x. True) (of_cnf (tseitin (Imp \<phi> \<psi>)))"
-
-lemma "eval \<alpha> \<phi> \<Longrightarrow> eval (eval \<alpha>) (of_cnf ([P \<phi>] # tseitin \<phi>))"
+lemma [simp]: "eval \<alpha> \<phi> \<Longrightarrow> eval (eval \<alpha>) (of_cnf ([P \<phi>] # tseitin \<phi>))"
   by auto
 
-(*insert type that fits for b*)
-lemma "eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>)) \<Longrightarrow> eval b \<phi>"
-  sorry
+lemma tseitin_consistent:
+  assumes "eval v (of_cnf(tseitin \<phi>))"
+  shows "eval (v \<circ> Atm) \<phi> = v \<phi>"
+proof (rule iffI)
+  assume "eval (v \<circ> Atm) \<phi>"
+  show "v \<phi>"
+    sorry
+next
+  assume "v \<phi>"
+  show "eval (v \<circ> Atm) \<phi>"
+    sorry
+qed
+
+(*lemma [simp]: "eval \<alpha> (Atm \<phi>) = eval (\<alpha> \<circ> Atm) \<phi>"
+
+(* try out *)
+lemma "eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>)) \<Longrightarrow> eval (\<alpha> \<circ> Atm) \<phi>"
+proof -
+  assume "eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>))"
+  from \<open>eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>))\<close>
+  have "eval \<alpha> (of_cnf [[P \<phi>]]) \<and> eval \<alpha> (of_cnf(tseitin \<phi>))" by auto
+  then have "eval \<alpha> (of_cnf [[P \<phi>]])" by auto
+  then have "eval \<alpha> (Atm \<phi>)" by auto
+  then have "\<alpha> \<phi>" by auto
+  show ?thesis
+  qed
 
 lemma equalitiy:
   "eval \<alpha> \<phi> \<Longrightarrow> \<alpha> \<phi> \<and> eval \<alpha> (of_cnf (tseitin \<phi>))"
   by auto
+
+(*(\<lambda>x. True)*)
+value "eval (\<lambda>x. True) (of_cnf (tseitin (Imp \<phi> \<psi>)))"
+  *)
+
 
 text \<open>
 Prove that \<open>a\<^sub>\<phi> \<and> tseitin \<phi>\<close> and \<open>\<phi>\<close> are equisatisfiable.
 \<close>
 lemma tseitin_equisat:
   "sat (of_cnf ([P \<phi>] # tseitin \<phi>)) \<longleftrightarrow> sat \<phi>"
-proof
+proof (rule iffI)
   assume "sat (of_cnf ([P \<phi>] # tseitin \<phi>))"
-  from \<open>sat (of_cnf ([P \<phi>] # tseitin \<phi>))\<close> 
+  show "sat \<phi>"
+  proof -
+    from \<open>sat (of_cnf ([P \<phi>] # tseitin \<phi>))\<close>
+    have "\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>))" by (simp add: sat_def)
+    then have "\<exists>\<alpha>. (\<alpha> \<phi>) \<and> eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>))" by auto
+    then have "\<exists>\<alpha>. \<alpha> \<phi>" and "\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>))" by auto
+    then show ?thesis
+      sorry
+  qed
+next
+  assume "sat \<phi>"
+  show "sat (of_cnf ([P \<phi>] # tseitin \<phi>))"
+  proof -
+    from \<open>sat \<phi>\<close>
+    have "\<exists>\<beta>. eval \<beta> \<phi>" by (simp add: sat_def)
+    then have "\<exists>\<beta>. eval (eval \<beta>) (of_cnf ([P \<phi>] # tseitin \<phi>))" by auto
+    then have "\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>))" by auto
+    then show ?thesis by (simp add: sat_def)
+  qed
+qed
+
+(*
+  assume "sat \<phi>"
+  from \<open>sat \<phi>\<close>
+  have "\<exists>\<alpha>. eval \<alpha> \<phi>" by (simp add: sat_def)
+  then have "\<exists>\<alpha>. eval (eval \<alpha>) (of_cnf ([P \<phi>] # tseitin \<phi>))" by auto
+  then have "\<exists>\<beta>. eval \<beta> (of_cnf ([P \<phi>] # tseitin \<phi>))" by auto
+  then have "sat (of_cnf ([P \<phi>] # tseitin \<phi>))" by (simp add: sat_def)
+next
+*)
+
+    
+    (*from \<open>\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>))\<close>
+    have "\<exists>\<alpha>. (\<alpha> \<phi> \<and> eval \<alpha> (of_cnf (tseitin \<phi>)))"*)
+  
+  (*assume "sat (of_cnf ([P \<phi>] # tseitin \<phi>))"
+  from \<open>sat (of_cnf ([P \<phi>] # tseitin \<phi>))\<close>
+  have "\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>))" by (simp add: sat_def)
+  then have "\<exists>\<alpha>. eval \<alpha> (Atm \<phi>)" by auto
+  *)
+  
+  (*from \<open>sat (of_cnf ([P \<phi>] # tseitin \<phi>))\<close>
   have "\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>)) = True"
     by (simp add: sat_def)
   show "sat \<phi>"
@@ -153,7 +224,7 @@ proof
     from \<open>\<not>sat \<phi>\<close> have "\<forall>\<alpha>. eval \<alpha> \<phi> = False" by (simp add: sat_def)
     from \<open>\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>)) = True\<close> 
     have "\<exists>\<alpha>. (\<alpha> \<phi> \<and> eval \<alpha> (of_cnf (tseitin \<phi>))) = True"
-      sorry
+      sorry*)
   
 text \<open>
 Prove linear bounds on the number of clauses and literals by suitably
