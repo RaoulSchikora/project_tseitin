@@ -29,7 +29,7 @@ datatype 'a form =
 
 text \<open>
 Define a function \<open>eval\<close> that evaluates the truth value of a formula with respect
-to a given truth assignment \<open>\<alpha> :: 'a \<Rightarrow>bool\<close>.
+to a given truth assignment \<open>\<alpha> :: 'a \<Rightarrow> bool\<close>.
 \<close>
 fun eval :: "('a \<Rightarrow> bool) \<Rightarrow> 'a form \<Rightarrow> bool"
   where
@@ -179,9 +179,10 @@ proof (rule iffI)
     from \<open>sat (of_cnf ([P \<phi>] # tseitin \<phi>))\<close>
     have "\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>))" by (simp add: sat_def)
     then have "\<exists>\<alpha>. (\<alpha> \<phi>) \<and> eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>))" by auto
-    then have "\<exists>\<alpha>. \<alpha> \<phi>" and "\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>))" by auto
-    then show ?thesis
-      sorry
+    then obtain \<alpha> where "\<alpha> \<phi>" and "eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>))" by auto
+    then have "eval (\<alpha> \<circ> Atm) \<phi>" by (simp add: tseitin_consistent)
+    then have "\<exists>\<beta>. eval \<beta> \<phi>" by auto
+    then show ?thesis by (simp add: sat_def)
   qed
 next
   assume "sat \<phi>"
