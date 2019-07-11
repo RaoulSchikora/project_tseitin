@@ -184,33 +184,6 @@ lemma tseitin_num_clauses:
   "length (tseitin \<phi>) \<le> 3 * size \<phi>"
   by (induction \<phi>) auto
 
-(*
-proof (induction \<phi> rule: tseitin.induct)
-  case IH: 1
-  then show ?case by auto
-next
-  case IH: (2 \<phi>)
-  have "length (tseitin (Atm \<phi>)) = 0" 
-    by auto
-  then have "length (tseitin (Atm \<phi>)) \<le> 3 * size (Atm \<phi>)" 
-    using IH by auto
-  then show ?case by auto
-next
-  case IH: (3 \<phi>)
-  have "length (tseitin (Neg \<phi>)) = 2 + length (tseitin \<phi>)" 
-    by auto
-  then have "length (tseitin (Neg \<phi>)) \<le> 3 * (1 + size \<phi>)" 
-    using IH by auto
-  then show ?case by auto
-next
-  case IH: (4 \<phi> \<psi>)
-  have "length (tseitin (Imp \<phi> \<psi>)) = 3 + length (tseitin \<phi>) + length (tseitin \<psi>)"
-    by auto
-  then have "length (tseitin (Imp \<phi> \<psi>)) \<le> 3 * (1 + size \<phi> + size \<psi>)" 
-    using IH by auto
-  then show ?case by auto
-qed *)
-
 text \<open>
 Prove a linear bound on the number of literals:
 \<close>
@@ -223,14 +196,7 @@ lemma num_literals_add [simp]:
 "num_literals (xs @ ys) = num_literals xs + num_literals ys"
   by (induction xs) auto
 
-value "tseitin (Neg (Imp (Bot) (Atm p)))"
-value "num_literals (tseitin (Neg (Imp Bot Bot)))"
-value "size (Neg (Imp Bot Bot))"
-value "num_literals (tseitin (Atm p))"
-value "num_literals (tseitin (Neg p))"
-value "num_literals (tseitin (Imp p q))"
-value "size (Imp p q)"
-
+(*not sure if seven is the lowest bound. Maybe a smaller bound exist*)
 lemma tseitin_num_literals:
   "num_literals (tseitin \<phi>) \<le> 7 * size \<phi>"
   by (induction \<phi>) auto
