@@ -22,7 +22,7 @@ For the purposes of this project propositional formulas (with atoms of an arbitr
 are restricted to the following (functionally complete) connectives:
 \<close>
 datatype 'a form =
-  Bot \<comment> \<open>the "always false" formula\<close>
+    Bot \<comment> \<open>the "always false" formula\<close>
   | Atm 'a \<comment> \<open>propositional atoms\<close>
   | Neg "'a form" \<comment> \<open>negation\<close>
   | Imp "'a form" "'a form" \<comment> \<open>implication\<close>
@@ -178,11 +178,13 @@ next
 qed
 
 text \<open>
-Prove linear bounds on the number of clauses and literals by suitably
-replacing \<open>n\<close> and \<open>num_literals\<close> below:
+Prove a linear bound on the number of clauses:
 \<close>
 lemma tseitin_num_clauses:
   "length (tseitin \<phi>) \<le> 3 * size \<phi>"
+  by (induction \<phi>) auto
+
+(*
 proof (induction \<phi> rule: tseitin.induct)
   case IH: 1
   then show ?case by auto
@@ -207,11 +209,31 @@ next
   then have "length (tseitin (Imp \<phi> \<psi>)) \<le> 3 * (1 + size \<phi> + size \<psi>)" 
     using IH by auto
   then show ?case by auto
-qed
+qed *)
+
+text \<open>
+Prove a linear bound on the number of literals:
+\<close>
+fun num_literals :: "('a form) cnf \<Rightarrow> nat"
+  where
+    "num_literals [] = 0"
+  | "num_literals (c # clauses) = length c + num_literals clauses"
+
+lemma num_literals_add [simp]:
+"num_literals (xs @ ys) = num_literals xs + num_literals ys"
+  by (induction xs) auto
+
+value "tseitin (Neg (Imp (Bot) (Atm p)))"
+value "num_literals (tseitin (Neg (Imp Bot Bot)))"
+value "size (Neg (Imp Bot Bot))"
+value "num_literals (tseitin (Atm p))"
+value "num_literals (tseitin (Neg p))"
+value "num_literals (tseitin (Imp p q))"
+value "size (Imp p q)"
 
 lemma tseitin_num_literals:
-  "num_literals (tseitin \<phi>) \<le> n * size \<phi>"
-  sorry
+  "num_literals (tseitin \<phi>) \<le> 7 * size \<phi>"
+  by (induction \<phi>) auto
 
 text \<open>
 Implement a function \<open>t_tseitin\<close> that computes the number of recursive calls of your
