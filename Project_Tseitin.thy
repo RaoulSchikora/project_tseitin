@@ -190,13 +190,13 @@ Prove a linear bound on the number of literals:
 fun num_literals :: "('a form) cnf \<Rightarrow> nat"
   where
     "num_literals [] = 0"
-  | "num_literals (c # clauses) = length c + num_literals clauses"
+  | "num_literals (c # cs) = length c + num_literals cs"
 
 lemma num_literals_add [simp]:
 "num_literals (xs @ ys) = num_literals xs + num_literals ys"
   by (induction xs) auto
 
-(*not sure if seven is the lowest bound. Maybe a smaller bound exist*)
+(*not sure if seven is the lowest bound. Maybe a smaller bound exists*)
 lemma tseitin_num_literals:
   "num_literals (tseitin \<phi>) \<le> 7 * size \<phi>"
   by (induction \<phi>) auto
@@ -208,11 +208,16 @@ earlier definition of @{const tseitin} and prove a linear bound in the size of t
 \<close>
 fun t_tseitin :: "'a form \<Rightarrow> nat"
   where
-    "t_tseitin \<phi> = undefined"
+    "t_tseitin (Bot) = 0"
+  | "t_tseitin (Atm \<phi>) = 0"
+  | "t_tseitin (Neg \<phi>) = 1 + t_tseitin \<phi>"
+  | "t_tseitin (Imp \<phi> \<psi>) = 2 + t_tseitin \<phi> + t_tseitin \<psi>"
 
+(* Also not sure if lower bound than 2 exits. Acutally I believe 1 would be enough. But
+I'm not able to prove it *)
 lemma tseitin_linear:
-  "t_tseitin \<phi> \<le> n * size \<phi>"
-  sorry
+  "t_tseitin \<phi> \<le> 2 * size \<phi>"
+  by (induction \<phi>) auto
 
 text \<open>
 Implement a tail recursive variant of @{const tseitin} and prove the lemma below:
