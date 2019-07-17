@@ -129,9 +129,20 @@ value "eval (\<lambda>x. True) (of_cnf (tseitin (Imp \<phi> \<psi>)))"
 lemma "eval \<alpha> \<phi> \<Longrightarrow> eval (eval \<alpha>) (of_cnf ([P \<phi>] # tseitin \<phi>))"
   by auto
 
+lemma[simp]: " eval (eval \<alpha>) (of_cnf ([P \<phi>] # tseitin \<phi>)) \<Longrightarrow> eval \<alpha> \<phi>"
+  by auto
+
+lemma [simp]: "v \<phi> \<Longrightarrow> eval (v \<circ> Atm) \<phi>"
+sorry
+
 (*insert type that fits for b*)
-lemma "eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>)) \<Longrightarrow> eval b \<phi>"
-  sorry
+lemma "eval v (of_cnf ([P \<phi>] # tseitin \<phi>)) \<Longrightarrow> eval (v \<circ> Atm) \<phi>" 
+proof -
+  assume  "eval v (of_cnf ([P \<phi>] # tseitin \<phi>))"
+  from \<open> eval v (of_cnf ([P \<phi>] # tseitin \<phi>)) \<close>
+  have  "eval v (of_cnf ([[P \<phi>]])) \<and> eval v (of_cnf(tseitin \<phi>)) " by auto
+  then have  "eval v (of_cnf ([[P \<phi>]] ))" ..
+  then show ?thesis by simp
 
 lemma equalitiy:
   "eval \<alpha> \<phi> \<Longrightarrow> \<alpha> \<phi> \<and> eval \<alpha> (of_cnf (tseitin \<phi>))"
