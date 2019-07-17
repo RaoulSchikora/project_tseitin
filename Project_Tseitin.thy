@@ -132,21 +132,54 @@ lemma [simp]: "eval (eval \<alpha>) (of_cnf(tseitin \<phi>))"
 lemma [simp]: "eval \<alpha> \<phi> \<Longrightarrow> eval (eval \<alpha>) (of_cnf ([P \<phi>] # tseitin \<phi>))"
   by auto
 
+value "of_cnf (tseitin (Imp (Atm p) (Atm q)))"
+value "eval v (of_cnf (tseitin (Imp (Atm p) (Atm q))))"
+value "eval (v \<circ> Atm) (Imp (Atm p) (Atm q))"
+value "v (Imp (Atm p) (Atm q))"
+value "eval (v \<circ> Atm) p"
+
+value "eval (v \<circ> Atm) (Neg x3)"
+value "eval (\<lambda>x.(True)) (of_cnf (tseitin (Neg x3)))"
+value "eval (eval (v \<circ> Atm)) (of_cnf [[P \<phi>]])"
+value "eval (v \<circ> Atm) (Neg (Imp (Imp (Neg (Atm x3)) Bot) (Neg (Neg Bot))))"
+value "eval (eval v) (of_cnf [[P (Atm \<phi>)]])"
+value "eval (eval v) (of_cnf (tseitin (Atm \<phi>)))"
+value "of_cnf (tseitin (Atm \<phi>))"
+
 lemma tseitin_consistent [simp]:
   assumes "eval v (of_cnf(tseitin \<phi>))"
   shows "eval (v \<circ> Atm) \<phi> = v \<phi>"
-proof (rule iffI)
-  assume "eval (v \<circ> Atm) \<phi>"
-  show "v \<phi>"
-    sorry
-next
-  assume "v \<phi>"
-  show "eval (v \<circ> Atm) \<phi>"
-    sorry
-qed
+  sorry
 
-(*(\<lambda>x. True)*)
-value "eval (\<lambda>x. True) (of_cnf (tseitin (Imp \<phi> \<psi>)))"
+(*
+  proof (cases \<phi>)
+    case c: Bot
+    have "\<not>(eval (v \<circ> Atm) \<phi>)" using c by auto
+    from this and \<open>eval (v \<circ> Atm) \<phi>\<close> 
+    show ?thesis by (rule notE)
+  next
+    case c: (Atm x2)
+    have "eval (v \<circ> Atm) (Atm x2) = (v \<circ> Atm) x2" by auto
+    then have "eval (v \<circ> Atm) (Atm x2) = v (Atm x2)" by auto
+    from \<open>eval (v \<circ> Atm) \<phi>\<close> show ?thesis using c by auto
+  next
+    case c: (Neg x3)
+    from \<open>eval v (of_cnf(tseitin \<phi>))\<close> 
+    have "eval v (of_cnf(tseitin (Neg x3)))" using c by auto
+    then have 1: "((\<not>v (Neg x3) \<or> \<not>v x3) \<and> ((v (Neg x3) \<or> v x3) \<and>
+           eval v (of_cnf (tseitin x3))))" by auto
+    from \<open>eval (v \<circ> Atm) \<phi>\<close> have 2: "eval (v \<circ> Atm) (Neg x3)" using c by auto
+    from 2 have "\<not> (eval (eval (v \<circ> Atm)) (of_cnf ([P x3] # tseitin x3)))" by auto
+    then have "\<not> (eval (eval (v \<circ> Atm)) (of_cnf [[P x3]]) 
+                \<and> eval (eval (v \<circ> Atm)) (of_cnf (tseitin x3)))" by auto
+    then have " \<not> (eval v (Atm x3) 
+                \<and> eval (eval (v \<circ> Atm)) (of_cnf (tseitin x3)))" by auto
+    then show ?thesis sorry
+  next
+    case (Imp x41 x42)
+    then show ?thesis sorry
+  qed
+*)
 
 text \<open>
 Prove that \<open>a\<^sub>\<phi> \<and> tseitin \<phi>\<close> and \<open>\<phi>\<close> are equisatisfiable.
@@ -159,8 +192,8 @@ proof (rule iffI)
   proof -
     from \<open>sat (of_cnf ([P \<phi>] # tseitin \<phi>))\<close>
     have "\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>))" by (simp add: sat_def)
-    then have "\<exists>\<alpha>. (\<alpha> \<phi>) \<and> eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>))" by auto
-    then obtain \<alpha> where "\<alpha> \<phi>" and "eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>))" by auto
+    then have "\<exists>\<alpha>. (\<alpha> \<phi>) \<and> eval \<alpha> (of_cnf (tseitin \<phi>))" by auto
+    then obtain \<alpha> where "\<alpha> \<phi>" and "eval \<alpha> (of_cnf (tseitin \<phi>))" by auto
     then have "eval (\<alpha> \<circ> Atm) \<phi>" by auto
     then have "\<exists>\<beta>. eval \<beta> \<phi>" by auto
     then show ?thesis by (simp add: sat_def)
@@ -201,6 +234,9 @@ lemma tseitin_num_literals:
   "num_literals (tseitin \<phi>) \<le> 7 * size \<phi>"
   by (induction \<phi>) auto
 
+value "size (Imp (Atm p) (Atm q))"
+value "num_literals (tseitin (Imp (Atm p) (Atm q)))"
+
 text \<open>
 Implement a function \<open>t_tseitin\<close> that computes the number of recursive calls of your
 earlier definition of @{const tseitin} and prove a linear bound in the size of the formula
@@ -212,8 +248,9 @@ fun t_tseitin :: "'a form \<Rightarrow> nat"
   | "t_tseitin (Atm \<phi>) = 0"
   | "t_tseitin (Neg \<phi>) = 1 + t_tseitin \<phi>"
   | "t_tseitin (Imp \<phi> \<psi>) = 2 + t_tseitin \<phi> + t_tseitin \<psi>"
+print_theorems
 
-(* Also not sure if lower bound than 2 exits. Acutally I believe 1 would be enough. But
+(* Also not sure if lower bound than 2 exits. Actually, I believe 1 would be enough. But
 I'm not able to prove it *)
 lemma tseitin_linear:
   "t_tseitin \<phi> \<le> 2 * size \<phi>"
@@ -224,7 +261,13 @@ Implement a tail recursive variant of @{const tseitin} and prove the lemma below
 \<close>
 fun tseitin2 :: "'a form \<Rightarrow> ('a form) cnf \<Rightarrow> ('a form) cnf"
   where
-    "tseitin2 \<phi> acc = undefined"
+    "tseitin2 Bot acc = ([N Bot] # acc)"
+  | "tseitin2 (Atm \<phi>) acc = acc"
+  | "tseitin2 (Neg \<phi>) acc 
+          = tseitin2 \<phi> ([(N (Neg \<phi>)), (N \<phi>)] # [(P (Neg \<phi>)), (P \<phi>)] # acc)"
+  | "tseitin2 (Imp \<phi> \<psi>) acc
+          = tseitin2 \<psi> ([(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)] # [(P (Imp \<phi> \<psi>)), (P \<phi>)] 
+                         # [(N \<psi>), (P (Imp \<phi> \<psi>))] # (tseitin2 \<phi> acc))"
 
 lemma tseitin2_equisat:
   "sat (of_cnf ([P \<phi>] # tseitin2 \<phi> [])) \<longleftrightarrow> sat \<phi>"
