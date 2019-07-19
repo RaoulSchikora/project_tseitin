@@ -147,10 +147,7 @@ next
   then have 1: "eval v (of_cnf (tseitin \<phi>))" by auto
   from \<open>eval v (of_cnf (tseitin \<phi>)) \<Longrightarrow> eval (v \<circ> Atm) \<phi> = v \<phi>\<close> 
   have 2: "eval v (of_cnf (tseitin \<phi>)) \<longrightarrow> eval (v \<circ> Atm) \<phi> = v \<phi>" by auto
-  from 2 and 1 have 3: "eval (v \<circ> Atm) \<phi> = v \<phi>" by (rule mp)
-  from this and 1 have "eval (v \<circ> Atm) \<phi> = eval v (of_cnf ([P \<phi>] # tseitin \<phi>))" by auto
-  from this and \<open>eval v (of_cnf (tseitin (Neg \<phi>)))\<close> 
-  have "eval (v \<circ> Atm) \<phi> \<noteq> v (Neg \<phi>)" by auto
+  from this and 1 have "eval (v \<circ> Atm) \<phi> = v \<phi>" by (rule mp)
   then show ?case using IH by auto
 next
   case IH: (Imp \<phi>1 \<phi>2)
@@ -161,8 +158,8 @@ next
   have 4: "eval v (of_cnf (tseitin \<phi>1)) \<longrightarrow> eval (v \<circ> Atm) \<phi>1 = v \<phi>1" by auto
   from \<open>eval v (of_cnf (tseitin \<phi>2)) \<Longrightarrow> eval (v \<circ> Atm) \<phi>2 = v \<phi>2\<close> 
   have 5: "eval v (of_cnf (tseitin \<phi>2)) \<longrightarrow> eval (v \<circ> Atm) \<phi>2 = v \<phi>2" by auto
-  from 4 and 2 have 6: "eval (v \<circ> Atm) \<phi>1 = v \<phi>1" by (rule mp)
-  from 5 and 3 have 7: "eval (v \<circ> Atm) \<phi>2 = v \<phi>2" by (rule mp)
+  from 4 and 2 have "eval (v \<circ> Atm) \<phi>1 = v \<phi>1" by (rule mp)
+  from 5 and 3 have "eval (v \<circ> Atm) \<phi>2 = v \<phi>2" by (rule mp)
   then show ?case using IH by auto
 qed
 
@@ -251,6 +248,34 @@ fun tseitin2 :: "'a form \<Rightarrow> ('a form) cnf \<Rightarrow> ('a form) cnf
           = tseitin2 \<psi> ([(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)] # [(P (Imp \<phi> \<psi>)), (P \<phi>)] 
                          # [(N \<psi>), (P (Imp \<phi> \<psi>))] # (tseitin2 \<phi> acc))"
 print_theorems
+
+
+value "of_cnf (tseitin (Neg \<phi>))"
+value "of_cnf (tseitin2 (Neg \<phi>) [])"
+
+lemma concatenation: "tseitin2 \<phi> xs = (tseitin2 \<phi> []) @ xs"
+proof (induction \<phi>)
+case Bot
+  then show ?case by auto
+next
+  case (Atm x)
+  then show ?case by auto
+next
+  case (Neg \<phi>)
+  then show ?case sorry
+next
+  case (Imp \<phi>1 \<phi>2)
+  then show ?case sorry
+qed
+
+lemma equality: "eval \<alpha> (of_cnf(tseitin \<phi>)) = eval \<alpha> (of_cnf(tseitin2 \<phi> []))"
+  sorry
+
+lemma [simp]: "eval (eval \<alpha>) (of_cnf(tseitin2 \<phi> []))"
+  sorry
+
+lemma [simp]: "eval \<alpha> \<phi> \<Longrightarrow> eval (eval \<alpha>) (of_cnf ([P \<phi>] # tseitin2 \<phi> []))"
+  sorry
 
 lemma tseitin2_equisat:
   "sat (of_cnf ([P \<phi>] # tseitin2 \<phi> [])) \<longleftrightarrow> sat \<phi>"
