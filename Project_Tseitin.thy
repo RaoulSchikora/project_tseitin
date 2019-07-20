@@ -147,7 +147,7 @@ next
   then have 1: "eval v (of_cnf (tseitin \<phi>))" by auto
   from \<open>eval v (of_cnf (tseitin \<phi>)) \<Longrightarrow> eval (v \<circ> Atm) \<phi> = v \<phi>\<close> 
   have 2: "eval v (of_cnf (tseitin \<phi>)) \<longrightarrow> eval (v \<circ> Atm) \<phi> = v \<phi>" by auto
-  from this and 1 have "eval (v \<circ> Atm) \<phi> = v \<phi>" by (rule mp)
+  from 2 and 1 have "eval (v \<circ> Atm) \<phi> = v \<phi>" by (rule mp)
   then show ?case using IH by auto
 next
   case IH: (Imp \<phi>1 \<phi>2)
@@ -295,7 +295,21 @@ into account and prove that \<open>a\<^sub>\<phi> \<and> plaisted True \<phi>\<c
 \<close>
 fun plaisted :: "bool \<Rightarrow> 'a form \<Rightarrow> ('a form) cnf"
   where
-    "plaisted p \<phi> = undefined"
+    "plaisted p Bot = [[N Bot]]"
+  | "plaisted p (Atm \<phi>) = []"
+  | "plaisted True (Neg \<phi>) = [(N (Neg \<phi>)), (N \<phi>)] # plaisted False \<phi>"
+  | "plaisted False (Neg \<phi>) = [(P (Neg \<phi>)), (P \<phi>)] # plaisted True \<phi>"
+  | "plaisted True (Imp \<phi> \<psi>) = [(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)] 
+                                # (plaisted False \<phi> @ plaisted True \<psi>)"
+  | "plaisted False (Imp \<phi> \<psi>) = [(P (Imp \<phi> \<psi>)), (P \<phi>)] # [(N \<psi>), (P (Imp \<phi> \<psi>))]
+                                # (plaisted True \<phi> @ plaisted False \<psi>)"
+
+
+lemma [simp]: "eval (eval \<alpha>) (of_cnf(plaisted p \<phi>))"
+  sorry
+
+lemma [simp]: "eval \<alpha> \<phi> \<Longrightarrow> eval (eval \<alpha>) (of_cnf ([P \<phi>] # plaisted Ture \<phi>))"
+  sorry
 
 lemma plaisted_equisat:
   "sat (of_cnf ([P \<phi>] # plaisted True \<phi>)) \<longleftrightarrow> sat \<phi>"
