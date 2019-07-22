@@ -270,7 +270,7 @@ lemma [simp]: "eval \<alpha> \<phi> \<Longrightarrow> eval (eval \<alpha>) (of_c
   by auto
 
 lemma [simp]: 
-  assumes "eval v (of_cnf (plaisted True \<phi>))" 
+  assumes "eval v (of_cnf (tseitin2 \<phi> []))" 
   shows "eval (v \<circ> Atm) \<phi> \<longleftrightarrow> v \<phi>"
   sorry
 
