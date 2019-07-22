@@ -304,9 +304,24 @@ fun plaisted :: "bool \<Rightarrow> 'a form \<Rightarrow> ('a form) cnf"
   | "plaisted False (Imp \<phi> \<psi>) = [(P (Imp \<phi> \<psi>)), (P \<phi>)] # [(N \<psi>), (P (Imp \<phi> \<psi>))]
                                 # (plaisted True \<phi> @ plaisted False \<psi>)"
 
+value "of_cnf (Plaisted (Neg \<phi>))"
+value "of_cnf (tseitin (Neg \<phi>))"
+value "of_cnf (tseitin2 (Neg \<phi>) [])"
 
 lemma [simp]: "eval (eval \<alpha>) (of_cnf(plaisted p \<phi>))"
-  sorry
+  proof (induction \<phi>)
+case Bot
+  then show ?case by auto
+next
+  case (Atm x)
+  then show ?case by auto
+next
+  case (Neg \<phi>)
+  then show ?case sorry
+next
+  case (Imp \<phi>1 \<phi>2)
+  then show ?case sorry
+qed
 
 lemma [simp]: "eval \<alpha> \<phi> \<Longrightarrow> eval (eval \<alpha>) (of_cnf ([P \<phi>] # plaisted Ture \<phi>))"
   sorry
