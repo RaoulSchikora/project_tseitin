@@ -281,15 +281,58 @@ qed
 lemma equality [simp]: "eval \<alpha> (of_cnf(tseitin \<phi>)) \<longleftrightarrow> eval \<alpha> (of_cnf(tseitin2 \<phi> []))"
   sorry
 
+
 lemma [simp]: "eval (eval \<alpha>) (of_cnf(tseitin2 \<phi> []))"
-  sorry
+  proof (cases \<phi>)
+  case Bot
+  then show ?thesis by (induction \<phi>) auto
+next
+  case (Atm x2)
+  then show ?thesis by (induction \<phi>) auto
+next
+  case (Neg x3)
+  then show ?thesis sorry
+next 
+  case (Imp x4 x5)
+  then show ?thesis sorry
+
+qed
 
 lemma [simp]: "eval \<alpha> \<phi> \<Longrightarrow> eval (eval \<alpha>) (of_cnf ([P \<phi>] # tseitin2 \<phi> []))"
+  by auto
+
+lemma [simp]: 
+  assumes "eval v (of_cnf (tseitin2 \<phi> []))" 
+  shows "eval (v \<circ> Atm) \<phi> \<longleftrightarrow> v \<phi>"
   sorry
+
 
 lemma tseitin2_equisat:
   "sat (of_cnf ([P \<phi>] # tseitin2 \<phi> [])) \<longleftrightarrow> sat \<phi>"
-  sorry
+ proof (rule iffI)
+  assume  "sat (of_cnf ([P \<phi>] # tseitin2 \<phi> []))"
+  show "sat \<phi>"
+ proof -
+    from \<open>sat (of_cnf ([P \<phi>] # tseitin2 \<phi> []))\<close>
+    have "\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin2 \<phi> []))" by (simp add: sat_def)
+    then have "\<exists>\<alpha>. (\<alpha> \<phi>) \<and> eval \<alpha> (of_cnf (tseitin2 \<phi> []))" by auto
+    then obtain \<alpha> where "\<alpha> \<phi>" and "eval \<alpha> (of_cnf (tseitin2 \<phi> []))" by auto
+    then have "eval (\<alpha> \<circ> Atm) \<phi>" by auto
+    then have "\<exists>\<beta>. eval \<beta> \<phi>" by auto
+    then show ?thesis by (simp add: sat_def)
+  qed
+next
+  assume "sat \<phi>"
+  show "sat (of_cnf ([P \<phi>] # tseitin2 \<phi> []))"
+  proof -
+    from \<open>sat \<phi>\<close>
+    have "\<exists>\<beta>. eval \<beta> \<phi>" by (simp add: sat_def)
+    then have "\<exists>\<beta>. eval (eval \<beta>) (of_cnf ([P \<phi>] # tseitin2 \<phi> []))" by auto
+    then have "\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin2 \<phi> []))" by auto
+    then show ?thesis by (simp add: sat_def)
+  qed
+qed
+
 
 
 subsection \<open>A Transformation due to Plaisted and Greenbaum\<close>
