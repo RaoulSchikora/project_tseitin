@@ -333,21 +333,9 @@ text \<open>
 Prove linear bounds on the number of clauses and literals by suitably
 replacing \<open>n\<close> and \<open>num_literals\<close> below:
 \<close>
-fun num_imp :: "'a form \<Rightarrow> nat"
-  where
-    "num_imp Bot = 0"
-  | "num_imp (Atm p) = 0"
-  | "num_imp (Neg \<phi>) = num_imp \<phi>"
-  | "num_imp (Imp \<phi> \<psi>) = 1 + num_imp \<phi> + num_imp \<psi>"
 
-fun num_bot :: "'a form \<Rightarrow> nat"
-  where
-    "num_bot Bot = 1"
-  | "num_bot (Atm p) = 0"
-  | "num_bot (Neg \<phi>) = num_bot \<phi>"
-  | "num_bot (Imp \<phi> \<psi>) = num_bot \<phi> + num_bot \<psi>"
-
-lemma [simp]: "length (plaisted p \<phi>) \<le> 2 * num_imp \<phi> + num_bot \<phi>"
+lemma plaisted_num_clauses:
+  "length (plaisted p \<phi>) \<le> 2 * size \<phi>"
 proof (induction \<phi> arbitrary: p)
   case Bot
   then show ?case by auto
@@ -356,26 +344,20 @@ next
   then show ?case by auto
 next
   case IH: (Neg \<phi>)
-  have "2 * num_imp \<phi> + num_bot \<phi> = 2 * num_imp (Neg \<phi>) + num_bot (Neg \<phi>)" by auto
-  then show ?case using IH by (cases p) auto
+  have "length (plaisted p (Neg \<phi>)) = length (plaisted (\<not>p) \<phi>)" by (cases p) auto
+  then have "length (plaisted p (Neg \<phi>)) \<le> 2 * size \<phi>" using IH by auto 
+  then show ?case by auto
 next
   case IH: (Imp \<phi> \<psi>)
-  then have 
-    1: "length (plaisted p (Imp \<phi> \<psi>)) \<le> 2 + length (plaisted (\<not>p) \<phi>) + length (plaisted p \<psi>)"
+  have 1: "length (plaisted p (Imp \<phi> \<psi>)) \<le> 2 + length (plaisted (\<not>p) \<phi>) + length (plaisted p \<psi>)"
     by (cases p) auto
-  have 
-    2: "2 + length (plaisted (\<not>p) \<phi>) + length (plaisted p \<psi>) 
-        \<le> 2 + length (plaisted (\<not>p) \<phi>) + (2 * num_imp \<psi> + num_bot \<psi>)"
+  have 2: "2 + length (plaisted (\<not>p) \<phi>) + length (plaisted p \<psi>) 
+              \<le> 2 + length (plaisted (\<not>p) \<phi>) + 2 * size \<psi>"
     using IH by auto
-  have "2 + length (plaisted (\<not>p) \<phi>) + (2 * num_imp \<psi> + num_bot \<psi>)
-        \<le> 2 + (2 * num_imp \<phi> + num_bot \<phi>) + (2 * num_imp \<psi> + num_bot \<psi>)"
+  have "2 + length (plaisted (\<not>p) \<phi>) + 2 * size \<psi> \<le> 2 + 2 * size \<phi> + 2 * size \<psi>"
     using IH by auto
   from 1 and 2 and this show ?case by auto
 qed
-
-lemma plaisted_num_clauses:
-  "length (plaisted p \<phi>) \<le> n * size \<phi>"
-  sorry
 
 lemma plaisted_num_literals:
   "num_literals (plaisted p \<phi>) \<le> n * size \<phi>"
