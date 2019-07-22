@@ -242,8 +242,8 @@ fun tseitin2 :: "'a form \<Rightarrow> ('a form) cnf \<Rightarrow> ('a form) cnf
   | "tseitin2 (Neg \<phi>) acc
           = tseitin2 \<phi> ([(N (Neg \<phi>)), (N \<phi>)] # [(P (Neg \<phi>)), (P \<phi>)] # acc)"
   | "tseitin2 (Imp \<phi> \<psi>) acc
-          = tseitin2 \<psi> ([(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)] # [(P (Imp \<phi> \<psi>)), (P \<phi>)] 
-                         # [(N \<psi>), (P (Imp \<phi> \<psi>))] # (tseitin2 \<phi> acc))"
+          = tseitin2 \<psi> (tseitin2 \<phi> ([(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)] # [(P (Imp \<phi> \<psi>)), (P \<phi>)] 
+                         # [(N \<psi>), (P (Imp \<phi> \<psi>))] # acc))"
 print_theorems
 
 lemma equality: "eval \<alpha> (of_cnf(tseitin \<phi>)) = eval \<alpha> (of_cnf(tseitin2 \<phi> []))"
