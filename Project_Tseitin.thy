@@ -246,7 +246,39 @@ fun tseitin2 :: "'a form \<Rightarrow> ('a form) cnf \<Rightarrow> ('a form) cnf
                          # [(N \<psi>), (P (Imp \<phi> \<psi>))] # acc))"
 print_theorems
 
-lemma equality: "eval \<alpha> (of_cnf(tseitin \<phi>)) = eval \<alpha> (of_cnf(tseitin2 \<phi> []))"
+lemma concatenation [simp]:
+  "tseitin2 \<phi> acc = (tseitin2 \<phi> []) @ acc"
+proof (induction \<phi> arbitrary: acc)
+  case Bot
+  then show ?case by auto
+next
+  case (Atm x)
+  then show ?case by auto
+next
+  case (Neg \<phi>)
+  then have 1: "\<forall>acc. tseitin2 \<phi> acc = tseitin2 \<phi> [] @ acc" by (rule allI)
+  have 2: "tseitin2 (Neg \<phi>) acc = tseitin2 \<phi> ([(N (Neg \<phi>)), (N \<phi>)] # [(P (Neg \<phi>)), (P \<phi>)] # acc)"
+    by auto
+  from 1 have 3: "tseitin2 \<phi> ([(N (Neg \<phi>)), (N \<phi>)] # [(P (Neg \<phi>)), (P \<phi>)] # acc)
+          = (tseitin2 \<phi> []) @ [(N (Neg \<phi>)), (N \<phi>)] # [(P (Neg \<phi>)), (P \<phi>)] # acc" by (rule allE)
+  have 4: "(tseitin2 \<phi> []) @ [(N (Neg \<phi>)), (N \<phi>)] # [(P (Neg \<phi>)), (P \<phi>)] # acc
+          = ((tseitin2 \<phi> []) @ [(N (Neg \<phi>)), (N \<phi>)] # [[(P (Neg \<phi>)), (P \<phi>)]]) @ acc" by auto
+  from 1 have 5: "(tseitin2 \<phi> ([(N (Neg \<phi>)), (N \<phi>)] # [[(P (Neg \<phi>)), (P \<phi>)]])) 
+          = ((tseitin2 \<phi> []) @ [(N (Neg \<phi>)), (N \<phi>)] # [[(P (Neg \<phi>)), (P \<phi>)]])" 
+    by (rule allE)
+  from this have "((tseitin2 \<phi> []) @ [(N (Neg \<phi>)), (N \<phi>)] # [[(P (Neg \<phi>)), (P \<phi>)]])
+          = (tseitin2 \<phi> ([(N (Neg \<phi>)), (N \<phi>)] # [[(P (Neg \<phi>)), (P \<phi>)]]))" by (rule sym)
+  from 2 and 3 and 4 and this show ?case by auto
+next
+  case IH: (Imp \<phi> \<psi>)
+  from \<open>\<And>acc. (tseitin2 \<phi> acc = tseitin2 \<phi> [] @ acc)\<close>
+  have 1: "\<forall>acc. tseitin2 \<phi> acc = tseitin2 \<phi> [] @ acc" by (rule allI)
+  from \<open>\<And>acc. (tseitin2 \<psi> acc = tseitin2 \<psi> [] @ acc)\<close>
+  have 2: "\<forall>acc. tseitin2 \<psi> acc = tseitin2 \<psi> [] @ acc" by (rule allI)
+  then show ?case sorry
+qed
+
+lemma equality [simp]: "eval \<alpha> (of_cnf(tseitin \<phi>)) \<longleftrightarrow> eval \<alpha> (of_cnf(tseitin2 \<phi> []))"
   sorry
 
 lemma [simp]: "eval (eval \<alpha>) (of_cnf(tseitin2 \<phi> []))"
@@ -305,7 +337,8 @@ lemma [simp]:
 
 lemma plaisted_equisat:
   "sat (of_cnf ([P \<phi>] # plaisted True \<phi>)) \<longleftrightarrow> sat \<phi>"
-proof (rule iffI)
+  sorry
+(*proof (rule iffI)
   assume "sat (of_cnf ([P \<phi>] # plaisted True \<phi>))"
   show "sat \<phi>" 
   proof -
@@ -327,7 +360,7 @@ next
     then have "\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # plaisted True \<phi>))" by auto
     then show ?thesis by (simp add: sat_def)
   qed
-qed
+qed*)
 
 text \<open>
 Prove linear bounds on the number of clauses and literals by suitably
@@ -360,8 +393,30 @@ next
 qed
 
 lemma plaisted_num_literals:
-  "num_literals (plaisted p \<phi>) \<le> n * size \<phi>"
-  sorry
+  "num_literals (plaisted p \<phi>) \<le> 4 * size \<phi>"
+proof (induction \<phi> arbitrary: p)
+  case Bot
+  then show ?case by auto
+next
+  case (Atm x)
+  then show ?case by auto
+next
+  case IH: (Neg \<phi>)
+  have "num_literals (plaisted p (Neg \<phi>)) = num_literals (plaisted (\<not>p) \<phi>)" by (cases p) auto
+  then have "num_literals (plaisted p (Neg \<phi>)) \<le> 4 * size \<phi>" using IH by auto 
+  then show ?case by auto
+next
+  case IH: (Imp \<phi> \<psi>)
+  have 1: "num_literals (plaisted p (Imp \<phi> \<psi>)) 
+          \<le> 4 + num_literals (plaisted (\<not>p) \<phi>) + num_literals (plaisted p \<psi>)"
+    by (cases p) auto
+  have 2: "4 + num_literals (plaisted (\<not>p) \<phi>) + num_literals (plaisted p \<psi>) 
+              \<le> 4 + num_literals (plaisted (\<not>p) \<phi>) + 4 * size \<psi>"
+    using IH by auto
+  have "4 + num_literals (plaisted (\<not>p) \<phi>) + 4 * size \<psi> \<le> 4 + 4 * size \<phi> + 4 * size \<psi>"
+    using IH by auto
+  from 1 and 2 and this show ?case by auto
+qed
 
 text \<open>
 Prove that with respect to the number of literals and clauses in the resulting CNF,
@@ -395,6 +450,28 @@ qed
 
 lemma plaisted_le_tseitin_num_literals:
   "num_literals (plaisted p \<phi>) \<le> num_literals (tseitin \<phi>)"
-  sorry
+proof (induction \<phi> arbitrary: p)
+case Bot
+  then show ?case by auto
+next
+  case (Atm x)
+  then show ?case by auto
+next
+  case IH: (Neg \<phi>)
+  have 1: "num_literals (plaisted p (Neg \<phi>)) = num_literals (plaisted (\<not>p) \<phi>)" by (cases p) auto
+  then have 2: "num_literals (plaisted (\<not>p) \<phi>) \<le> num_literals (tseitin \<phi>)" using IH by auto
+  from 1 and 2 show ?case by auto
+next
+  case IH: (Imp \<phi> \<psi>)
+  have 1:
+    "num_literals (plaisted p (Imp \<phi> \<psi>)) 
+          \<le> 4 + num_literals (plaisted (\<not>p) \<phi>) + num_literals (plaisted p \<psi>)"
+    by (cases p) auto
+  have 2: "4 + num_literals (plaisted (\<not>p) \<phi>) + num_literals (plaisted p \<psi>)
+        \<le> 4 + num_literals (plaisted (\<not>p) \<phi>) + num_literals (tseitin \<psi>)" using IH by auto
+  have "4 + num_literals (plaisted (\<not>p) \<phi>) + num_literals (tseitin \<psi>)
+        \<le> 4 + num_literals (tseitin \<phi>) + num_literals (tseitin \<psi>)" using IH by auto
+  from 1 and 2 and this show ?case by auto
+qed
 
 end
