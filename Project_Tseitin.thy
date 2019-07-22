@@ -211,7 +211,6 @@ lemma num_literals_add [simp]:
 "num_literals (xs @ ys) = num_literals xs + num_literals ys"
   by (induction xs) auto
 
-(*not sure if seven is the lowest bound. Maybe a smaller bound exists*)
 lemma tseitin_num_literals:
   "num_literals (tseitin \<phi>) \<le> 7 * size \<phi>"
   by (induction \<phi>) auto
@@ -229,8 +228,6 @@ fun t_tseitin :: "'a form \<Rightarrow> nat"
   | "t_tseitin (Imp \<phi> \<psi>) = 2 + t_tseitin \<phi> + t_tseitin \<psi>"
 print_theorems
 
-(* Also not sure if lower bound than 2 exits. Actually, I believe 1 would be enough. But
-I'm not able to prove it *)
 lemma tseitin_linear:
   "t_tseitin \<phi> \<le> 2 * size \<phi>"
   by (induction \<phi>) auto
@@ -248,25 +245,6 @@ fun tseitin2 :: "'a form \<Rightarrow> ('a form) cnf \<Rightarrow> ('a form) cnf
           = tseitin2 \<psi> ([(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)] # [(P (Imp \<phi> \<psi>)), (P \<phi>)] 
                          # [(N \<psi>), (P (Imp \<phi> \<psi>))] # (tseitin2 \<phi> acc))"
 print_theorems
-
-
-value "of_cnf (tseitin (Neg \<phi>))"
-value "of_cnf (tseitin2 (Neg \<phi>) [])"
-
-lemma concatenation: "tseitin2 \<phi> xs = (tseitin2 \<phi> []) @ xs"
-proof (induction \<phi>)
-case Bot
-  then show ?case by auto
-next
-  case (Atm x)
-  then show ?case by auto
-next
-  case (Neg \<phi>)
-  then show ?case sorry
-next
-  case (Imp \<phi>1 \<phi>2)
-  then show ?case sorry
-qed
 
 lemma equality: "eval \<alpha> (of_cnf(tseitin \<phi>)) = eval \<alpha> (of_cnf(tseitin2 \<phi> []))"
   sorry
@@ -319,15 +297,6 @@ qed
 
 lemma [simp]: "eval \<alpha> \<phi> \<Longrightarrow> eval (eval \<alpha>) (of_cnf ([P \<phi>] # plaisted p \<phi>))"
   by auto
-
-value "eval \<alpha> (of_cnf (tseitin (Neg Bot)))"
-value "eval \<alpha> (of_cnf (plaisted True (Neg Bot)))"
-value "\<not> ( ( \<alpha> (Neg Bot) \<and> \<alpha> Bot) \<or>
-      ( ( \<not>\<alpha> (Neg Bot) \<and> \<not>\<alpha> Bot) \<or>
-            \<alpha> Bot))"
-value "\<not> ( ( \<alpha> (Neg Bot) \<and> \<alpha> Bot) \<or> \<alpha> Bot)"
-value "eval \<alpha> (of_cnf(tseitin (Neg Bot))) \<longleftrightarrow> eval \<alpha> (of_cnf(plaisted True (Neg Bot)))"
-value "(plaisted (True) (Neg \<phi>))"
 
 lemma [simp]: 
   assumes "eval v (of_cnf (plaisted True \<phi>))" 
