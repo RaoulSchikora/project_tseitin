@@ -269,13 +269,46 @@ next
   from this have "((tseitin2 \<phi> []) @ [(N (Neg \<phi>)), (N \<phi>)] # [[(P (Neg \<phi>)), (P \<phi>)]])
           = (tseitin2 \<phi> ([(N (Neg \<phi>)), (N \<phi>)] # [[(P (Neg \<phi>)), (P \<phi>)]]))" by (rule sym)
   from 2 and 3 and 4 and this show ?case by auto
-next
   case IH: (Imp \<phi> \<psi>)
   from \<open>\<And>acc. (tseitin2 \<phi> acc = tseitin2 \<phi> [] @ acc)\<close>
   have 1: "\<forall>acc. tseitin2 \<phi> acc = tseitin2 \<phi> [] @ acc" by (rule allI)
   from \<open>\<And>acc. (tseitin2 \<psi> acc = tseitin2 \<psi> [] @ acc)\<close>
   have 2: "\<forall>acc. tseitin2 \<psi> acc = tseitin2 \<psi> [] @ acc" by (rule allI)
-  then show ?case sorry
+  from 2 have 3: "tseitin2 \<psi> (tseitin2 \<phi> ([(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)] # [(P (Imp \<phi> \<psi>)), (P \<phi>)] 
+                         # [(N \<psi>), (P (Imp \<phi> \<psi>))] # acc))
+          = tseitin2 \<psi> [] @ (tseitin2 \<phi> ([(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)] # [(P (Imp \<phi> \<psi>)), (P \<phi>)] 
+                         # [(N \<psi>), (P (Imp \<phi> \<psi>))] # acc))" by (rule allE)
+  from 1 have 4: 
+           "tseitin2 \<phi> ([(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)] # [(P (Imp \<phi> \<psi>)), (P \<phi>)] 
+                         # [(N \<psi>), (P (Imp \<phi> \<psi>))] # acc)
+          = tseitin2 \<phi> [] @ [(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)] # [(P (Imp \<phi> \<psi>)), (P \<phi>)] 
+                         # [(N \<psi>), (P (Imp \<phi> \<psi>))] # acc" by (rule allE)
+  then have 5: 
+           "tseitin2 \<psi> [] @ tseitin2 \<phi> ([(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)] # [(P (Imp \<phi> \<psi>)), (P \<phi>)] 
+                         # [(N \<psi>), (P (Imp \<phi> \<psi>))] # acc)
+          = tseitin2 \<psi> [] @ tseitin2 \<phi> [] @ [(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)] # [(P (Imp \<phi> \<psi>)), (P \<phi>)] 
+                         # [(N \<psi>), (P (Imp \<phi> \<psi>))] # acc" by auto
+  from 1 have 6:
+           "tseitin2 \<phi> ([(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)] # [(P (Imp \<phi> \<psi>)), (P \<phi>)] 
+                         # [[(N \<psi>), (P (Imp \<phi> \<psi>))]])
+          = tseitin2 \<phi> [] @ [(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)] # [(P (Imp \<phi> \<psi>)), (P \<phi>)] 
+                         # [[(N \<psi>), (P (Imp \<phi> \<psi>))]]" by (rule allE)
+  then have 7:
+           "tseitin2 \<phi> [] @ [(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)] # [(P (Imp \<phi> \<psi>)), (P \<phi>)] 
+                         # [[(N \<psi>), (P (Imp \<phi> \<psi>))]] 
+          = tseitin2 \<phi> ([(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)] # [(P (Imp \<phi> \<psi>)), (P \<phi>)] 
+                         # [[(N \<psi>), (P (Imp \<phi> \<psi>))]])" by (rule sym)
+  from 2 have 8:
+           "tseitin2 \<psi> (tseitin2 \<phi> ([(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)] # [(P (Imp \<phi> \<psi>)), (P \<phi>)] 
+                         # [[(N \<psi>), (P (Imp \<phi> \<psi>))]]))
+          = tseitin2 \<psi> [] @ tseitin2 \<phi> ([(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)] # [(P (Imp \<phi> \<psi>)), (P \<phi>)] 
+                         # [[(N \<psi>), (P (Imp \<phi> \<psi>))]])" by (rule allE)
+  then have 9:
+           "tseitin2 \<psi> [] @ tseitin2 \<phi> ([(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)] # [(P (Imp \<phi> \<psi>)), (P \<phi>)] 
+                         # [[(N \<psi>), (P (Imp \<phi> \<psi>))]])
+          = tseitin2 \<psi> (tseitin2 \<phi> ([(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)] # [(P (Imp \<phi> \<psi>)), (P \<phi>)] 
+                         # [[(N \<psi>), (P (Imp \<phi> \<psi>))]]))" by (rule sym)
+  from 3 and 5 and 7 and 9 show ?case by auto
 qed
 
 lemma equality [simp]: "eval \<alpha> (of_cnf(tseitin \<phi>)) \<longleftrightarrow> eval \<alpha> (of_cnf(tseitin2 \<phi> []))"
