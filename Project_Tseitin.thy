@@ -246,38 +246,6 @@ fun tseitin2 :: "'a form \<Rightarrow> ('a form) cnf \<Rightarrow> ('a form) cnf
                          # [(N \<psi>), (P (Imp \<phi> \<psi>))] # acc))"
 print_theorems
 
-lemma concatenation [simp]:
-  "tseitin2 \<phi> acc = (tseitin2 \<phi> []) @ acc"
-proof (induction \<phi> arbitrary: acc)
-  case Bot
-  then show ?case by auto
-next
-  case (Atm x)
-  then show ?case by auto
-next
-  case (Neg \<phi>)
-  then have 1: "\<forall>acc. tseitin2 \<phi> acc = tseitin2 \<phi> [] @ acc" by (rule allI)
-  have 2: "tseitin2 (Neg \<phi>) acc = tseitin2 \<phi> ([(N (Neg \<phi>)), (N \<phi>)] # [(P (Neg \<phi>)), (P \<phi>)] # acc)"
-    by auto
-  from 1 have 3: "tseitin2 \<phi> ([(N (Neg \<phi>)), (N \<phi>)] # [(P (Neg \<phi>)), (P \<phi>)] # acc)
-          = (tseitin2 \<phi> []) @ [(N (Neg \<phi>)), (N \<phi>)] # [(P (Neg \<phi>)), (P \<phi>)] # acc" by (rule allE)
-  have 4: "(tseitin2 \<phi> []) @ [(N (Neg \<phi>)), (N \<phi>)] # [(P (Neg \<phi>)), (P \<phi>)] # acc
-          = ((tseitin2 \<phi> []) @ [(N (Neg \<phi>)), (N \<phi>)] # [[(P (Neg \<phi>)), (P \<phi>)]]) @ acc" by auto
-  from 1 have 5: "(tseitin2 \<phi> ([(N (Neg \<phi>)), (N \<phi>)] # [[(P (Neg \<phi>)), (P \<phi>)]])) 
-          = ((tseitin2 \<phi> []) @ [(N (Neg \<phi>)), (N \<phi>)] # [[(P (Neg \<phi>)), (P \<phi>)]])" 
-    by (rule allE)
-  from this have "((tseitin2 \<phi> []) @ [(N (Neg \<phi>)), (N \<phi>)] # [[(P (Neg \<phi>)), (P \<phi>)]])
-          = (tseitin2 \<phi> ([(N (Neg \<phi>)), (N \<phi>)] # [[(P (Neg \<phi>)), (P \<phi>)]]))" by (rule sym)
-  from 2 and 3 and 4 and this show ?case by auto
-next
-  case IH: (Imp \<phi> \<psi>)
-  from \<open>\<And>acc. (tseitin2 \<phi> acc = tseitin2 \<phi> [] @ acc)\<close>
-  have 1: "\<forall>acc. tseitin2 \<phi> acc = tseitin2 \<phi> [] @ acc" by (rule allI)
-  from \<open>\<And>acc. (tseitin2 \<psi> acc = tseitin2 \<psi> [] @ acc)\<close>
-  have 2: "\<forall>acc. tseitin2 \<psi> acc = tseitin2 \<psi> [] @ acc" by (rule allI)
-  then show ?case sorry
-qed
-
 lemma equality [simp]: "eval \<alpha> (of_cnf(tseitin \<phi>)) \<longleftrightarrow> eval \<alpha> (of_cnf(tseitin2 \<phi> []))"
   sorry
 
@@ -331,6 +299,39 @@ next
     then have "\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin2 \<phi> []))" by auto
     then show ?thesis by (simp add: sat_def)
   qed
+qed
+
+
+lemma concatenation [simp]:
+  "tseitin2 \<phi> acc = (tseitin2 \<phi> []) @ acc"
+proof (induction \<phi> arbitrary: acc)
+  case Bot
+  then show ?case by auto
+next
+  case (Atm x)
+  then show ?case by auto
+next
+  case (Neg \<phi>)
+  then have 1: "\<forall>acc. tseitin2 \<phi> acc = tseitin2 \<phi> [] @ acc" by (rule allI)
+  have 2: "tseitin2 (Neg \<phi>) acc = tseitin2 \<phi> ([(N (Neg \<phi>)), (N \<phi>)] # [(P (Neg \<phi>)), (P \<phi>)] # acc)"
+    by auto
+  from 1 have 3: "tseitin2 \<phi> ([(N (Neg \<phi>)), (N \<phi>)] # [(P (Neg \<phi>)), (P \<phi>)] # acc)
+          = (tseitin2 \<phi> []) @ [(N (Neg \<phi>)), (N \<phi>)] # [(P (Neg \<phi>)), (P \<phi>)] # acc" by (rule allE)
+  have 4: "(tseitin2 \<phi> []) @ [(N (Neg \<phi>)), (N \<phi>)] # [(P (Neg \<phi>)), (P \<phi>)] # acc
+          = ((tseitin2 \<phi> []) @ [(N (Neg \<phi>)), (N \<phi>)] # [[(P (Neg \<phi>)), (P \<phi>)]]) @ acc" by auto
+  from 1 have 5: "(tseitin2 \<phi> ([(N (Neg \<phi>)), (N \<phi>)] # [[(P (Neg \<phi>)), (P \<phi>)]])) 
+          = ((tseitin2 \<phi> []) @ [(N (Neg \<phi>)), (N \<phi>)] # [[(P (Neg \<phi>)), (P \<phi>)]])" 
+    by (rule allE)
+  from this have "((tseitin2 \<phi> []) @ [(N (Neg \<phi>)), (N \<phi>)] # [[(P (Neg \<phi>)), (P \<phi>)]])
+          = (tseitin2 \<phi> ([(N (Neg \<phi>)), (N \<phi>)] # [[(P (Neg \<phi>)), (P \<phi>)]]))" by (rule sym)
+  from 2 and 3 and 4 and this show ?case by auto
+next
+  case IH: (Imp \<phi> \<psi>)
+  from \<open>\<And>acc. (tseitin2 \<phi> acc = tseitin2 \<phi> [] @ acc)\<close>
+  have 1: "\<forall>acc. tseitin2 \<phi> acc = tseitin2 \<phi> [] @ acc" by (rule allI)
+  from \<open>\<And>acc. (tseitin2 \<psi> acc = tseitin2 \<psi> [] @ acc)\<close>
+  have 2: "\<forall>acc. tseitin2 \<psi> acc = tseitin2 \<psi> [] @ acc" by (rule allI)
+  then show ?case sorry
 qed
 
 
