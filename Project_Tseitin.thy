@@ -337,7 +337,20 @@ next
   finally show ?case .
 next
   case IH: (Imp \<phi> \<psi>)
-  then show ?case sorry
+  have "eval \<alpha> (of_cnf(tseitin (Imp \<phi> \<psi>)))
+          = eval \<alpha> (of_cnf (tseitin \<psi> @ tseitin \<phi> 
+          @ ([[(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)], [(P (Imp \<phi> \<psi>)), (P \<phi>)],
+                         [(N \<psi>), (P (Imp \<phi> \<psi>))]])))" by auto
+  also have "... = eval \<alpha> (of_cnf (tseitin2 \<psi> [] @ tseitin2 \<phi> []
+          @ ([[(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)], [(P (Imp \<phi> \<psi>)), (P \<phi>)],
+                         [(N \<psi>), (P (Imp \<phi> \<psi>))]])))" using IH by auto
+  also have "... = eval \<alpha> (of_cnf (tseitin2 \<psi> []
+          @ (tseitin2 \<phi> ([[(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)], [(P (Imp \<phi> \<psi>)), (P \<phi>)],
+                         [(N \<psi>), (P (Imp \<phi> \<psi>))]]))))" unfolding tseitin2_concat2 ..
+  also have "... = eval \<alpha> (of_cnf 
+          (tseitin2 \<psi> (tseitin2 \<phi> ([[(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)], [(P (Imp \<phi> \<psi>)), (P \<phi>)],
+                         [(N \<psi>), (P (Imp \<phi> \<psi>))]]))))" unfolding tseitin2_concat2 ..
+  finally show ?case by auto
 qed
 
 lemma [simp]: "eval (eval \<alpha>) (of_cnf(tseitin2 \<phi> []))"
