@@ -123,7 +123,7 @@ text \<open>
 Prove several lemmas on the way to the important prove of equisatisfiability between
 the function \<phi> and its tseitin transformation.
 \<close>
-lemma [simp]: "eval \<alpha> (of_cnf (xs @ ys)) = (eval \<alpha> (of_cnf xs) \<and> eval \<alpha> (of_cnf ys))"
+lemma cnf_linear [simp]: "eval \<alpha> (of_cnf (xs @ ys)) = (eval \<alpha> (of_cnf xs) \<and> eval \<alpha> (of_cnf ys))"
   by (induction xs) auto
 
 lemma [simp]: "eval (eval \<alpha>) (of_cnf(tseitin \<phi>))"
@@ -246,8 +246,8 @@ fun tseitin2 :: "'a form \<Rightarrow> ('a form) cnf \<Rightarrow> ('a form) cnf
                          # [(N \<psi>), (P (Imp \<phi> \<psi>))] # acc))"
 print_theorems
 
-lemma concatenation [simp]:
-  "tseitin2 \<phi> acc = (tseitin2 \<phi> []) @ acc"
+lemma tseitin2_concat:
+  "tseitin2 \<phi> acc = tseitin2 \<phi> [] @ acc"
 proof (induction \<phi> arbitrary: acc)
   case Bot
   then show ?case by auto
@@ -269,6 +269,7 @@ next
   from this have "((tseitin2 \<phi> []) @ [(N (Neg \<phi>)), (N \<phi>)] # [[(P (Neg \<phi>)), (P \<phi>)]])
           = (tseitin2 \<phi> ([(N (Neg \<phi>)), (N \<phi>)] # [[(P (Neg \<phi>)), (P \<phi>)]]))" by (rule sym)
   from 2 and 3 and 4 and this show ?case by auto
+next
   case IH: (Imp \<phi> \<psi>)
   from \<open>\<And>acc. (tseitin2 \<phi> acc = tseitin2 \<phi> [] @ acc)\<close>
   have 1: "\<forall>acc. tseitin2 \<phi> acc = tseitin2 \<phi> [] @ acc" by (rule allI)
@@ -311,8 +312,33 @@ next
   from 3 and 5 and 7 and 9 show ?case by auto
 qed
 
-lemma equality [simp]: "eval \<alpha> (of_cnf(tseitin \<phi>)) \<longleftrightarrow> eval \<alpha> (of_cnf(tseitin2 \<phi> []))"
-  sorry
+lemma tseitin2_concat2:
+  "tseitin2 \<phi> [] @ acc = tseitin2 \<phi> acc"  
+  by (rule sym, rule tseitin2_concat)
+
+lemma tseitin_equality: "eval \<alpha> (of_cnf(tseitin \<phi>)) \<longleftrightarrow> eval \<alpha> (of_cnf(tseitin2 \<phi> []))"
+proof (induction \<phi>)
+  case Bot
+  show ?case by auto
+next
+  case (Atm x)
+  show ?case by auto
+next
+  case IH: (Neg \<phi>)
+  have "eval \<alpha> (of_cnf(tseitin (Neg \<phi>))) = (eval \<alpha> (of_cnf(tseitin \<phi>)) 
+        \<and> eval \<alpha> (of_cnf([(N (Neg \<phi>)), (N \<phi>)] # [[(P (Neg \<phi>)), (P \<phi>)]])))" by auto
+  also have "... = (eval \<alpha> (of_cnf(tseitin2 \<phi> [])) 
+        \<and> eval \<alpha> (of_cnf([(N (Neg \<phi>)), (N \<phi>)] # [[(P (Neg \<phi>)), (P \<phi>)]])))" unfolding IH ..
+  also have "... = eval \<alpha> (of_cnf(tseitin2 \<phi> [] @ [(N (Neg \<phi>)), (N \<phi>)] # [[(P (Neg \<phi>)), (P \<phi>)]]))"
+    unfolding cnf_linear ..
+  also have "... = eval \<alpha> (of_cnf(tseitin2 \<phi> ([(N (Neg \<phi>)), (N \<phi>)] # [[(P (Neg \<phi>)), (P \<phi>)]])))"
+    unfolding tseitin2_concat2 ..
+  also have "... = eval \<alpha> (of_cnf(tseitin2 (Neg \<phi>) []))" unfolding tseitin2.simps ..
+  finally show ?case .
+next
+  case IH: (Imp \<phi> \<psi>)
+  then show ?case sorry
+qed
 
 lemma [simp]: "eval (eval \<alpha>) (of_cnf(tseitin2 \<phi> []))"
   sorry
@@ -375,29 +401,6 @@ lemma [simp]:
 lemma plaisted_equisat:
   "sat (of_cnf ([P \<phi>] # plaisted True \<phi>)) \<longleftrightarrow> sat \<phi>"
   sorry
-(*proof (rule iffI)
-  assume "sat (of_cnf ([P \<phi>] # plaisted True \<phi>))"
-  show "sat \<phi>" 
-  proof -
-    from \<open>sat (of_cnf ([P \<phi>] # plaisted True \<phi>))\<close>
-    have "\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # plaisted True \<phi>))" by (simp add: sat_def)
-    then have "\<exists>\<alpha>. (\<alpha> \<phi>) \<and> eval \<alpha> (of_cnf (plaisted True \<phi>))" by auto
-    then obtain \<alpha> where "\<alpha> \<phi>" and "eval \<alpha> (of_cnf (plaisted True \<phi>))" by auto
-    then have "eval (\<alpha> \<circ> Atm) \<phi>" by auto
-    then have "\<exists>\<beta>. eval \<beta> \<phi>" by auto
-    then show ?thesis by (simp add: sat_def)
-  qed
-next
-  assume "sat \<phi>"
-  show "sat (of_cnf ([P \<phi>] # plaisted True \<phi>))"
-  proof -
-    from \<open>sat \<phi>\<close>
-    have "\<exists>\<beta>. eval \<beta> \<phi>" by (simp add: sat_def)
-    then have "\<exists>\<beta>. eval (eval \<beta>) (of_cnf ([P \<phi>] # plaisted True \<phi>))" by auto
-    then have "\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # plaisted True \<phi>))" by auto
-    then show ?thesis by (simp add: sat_def)
-  qed
-qed*)
 
 text \<open>
 Prove linear bounds on the number of clauses and literals by suitably
