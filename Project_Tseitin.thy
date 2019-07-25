@@ -355,44 +355,50 @@ qed
 lemma tseitin_equality2: "eval \<alpha> (of_cnf(tseitin2 \<phi> [])) \<longleftrightarrow> eval \<alpha> (of_cnf(tseitin \<phi>))"
   by (rule sym, rule tseitin_equality)
 
-lemma tseitin_eq: "\<forall>\<alpha>. (eval \<alpha> (of_cnf(tseitin2 \<phi> [])) \<longleftrightarrow> eval \<alpha> (of_cnf(tseitin \<phi>)))"
+lemma tseitin_eq_for_all: "\<forall>\<alpha>. (eval \<alpha> (of_cnf(tseitin2 \<phi> [])) \<longleftrightarrow> eval \<alpha> (of_cnf(tseitin \<phi>)))"
 proof -
   have "\<And>\<alpha>. eval \<alpha> (of_cnf (tseitin2 \<phi> [])) \<longleftrightarrow> eval \<alpha> (of_cnf (tseitin \<phi>))"
     by (rule tseitin_equality2)
   then show ?thesis by auto
 qed
 
-lemma tseitin2_equisat:
-  "sat (of_cnf ([P \<phi>] # tseitin2 \<phi> [])) \<longleftrightarrow> sat \<phi>"
-proof (rule iffI)
-  assume 1: "sat (of_cnf ([P \<phi>] # tseitin2 \<phi> []))"
-  then show "sat \<phi>"
-  proof -
-    from 1 have "\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin2 \<phi> []))" by (simp add: sat_def)
-    then obtain \<alpha> where 3: "\<alpha> \<phi>" and 4: "eval \<alpha> (of_cnf (tseitin2 \<phi> []))" by auto
-    have "\<forall>\<alpha>. eval \<alpha> (of_cnf(tseitin2 \<phi> [])) \<longleftrightarrow> eval \<alpha> (of_cnf(tseitin \<phi>))" by (rule tseitin_eq)
-    then have "eval \<alpha> (of_cnf(tseitin2 \<phi> [])) \<longleftrightarrow> eval \<alpha> (of_cnf(tseitin \<phi>))" by (rule allE)
-    from 4 and this have "eval \<alpha> (of_cnf(tseitin \<phi>))" by auto
-    from this and 3 have "eval (\<alpha> \<circ> Atm) \<phi>" by auto
-    then have "\<exists>\<beta>. eval \<beta> \<phi>" by auto
-    then show ?thesis by (simp add: sat_def)
-  qed
-next
-  assume 2: "sat \<phi>"
-  then show "sat (of_cnf ([P \<phi>] # tseitin2 \<phi> []))"
-  proof -
-    from 2 have "\<exists>\<beta>. eval \<beta> \<phi>" by (simp add: sat_def)
-    then have "\<exists>\<beta>. eval (eval \<beta>) (of_cnf ([P \<phi>] # tseitin \<phi>))" by auto
-    then have "\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>))" by auto
-    then obtain \<alpha> where 3: "\<alpha> \<phi>" and 4: "eval \<alpha> (of_cnf (tseitin \<phi>))" by auto
-    have "\<forall>\<alpha>. eval \<alpha> (of_cnf(tseitin2 \<phi> [])) \<longleftrightarrow> eval \<alpha> (of_cnf(tseitin \<phi>))" by (rule tseitin_eq)
-    then have "eval \<alpha> (of_cnf(tseitin2 \<phi> [])) \<longleftrightarrow> eval \<alpha> (of_cnf(tseitin \<phi>))" by (rule allE)
-    from 4 and this have 5: "eval \<alpha> (of_cnf (tseitin2 \<phi> []))" by auto
-    from 3 and 5 have "\<alpha> \<phi> \<and> eval \<alpha> (of_cnf (tseitin2 \<phi> []))" by auto
-    then have "\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin2 \<phi> []))" by auto
-    then show ?thesis by (simp add: sat_def)
+lemma tseitin_eq_ex:
+ "(\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin2 \<phi> []))) \<longleftrightarrow> (\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>)))"
+proof -
+  have 1: "\<forall>\<alpha>. eval \<alpha> (of_cnf(tseitin2 \<phi> [])) \<longleftrightarrow> eval \<alpha> (of_cnf(tseitin \<phi>))" 
+    by (rule tseitin_eq_for_all)
+  show ?thesis
+  proof (rule iffI)
+    assume 2: "\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin2 \<phi> []))"
+    show "\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>))"
+    proof -
+      from 2 obtain \<alpha> where 3: "\<alpha> \<phi>" and 4: "eval \<alpha> (of_cnf (tseitin2 \<phi> []))" by auto
+      from 1 have "eval \<alpha> (of_cnf(tseitin2 \<phi> [])) \<longleftrightarrow> eval \<alpha> (of_cnf(tseitin \<phi>))" by (rule allE)
+      from this and 3 and 4 show ?thesis by auto
+    qed
+    next
+      assume 5: "\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>))"
+      show "\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin2 \<phi> []))"
+      proof -
+      from 5 obtain \<alpha> where 6: "\<alpha> \<phi>" and 7: "eval \<alpha> (of_cnf (tseitin \<phi>))" by auto
+      from 1 have "eval \<alpha> (of_cnf(tseitin2 \<phi> [])) \<longleftrightarrow> eval \<alpha> (of_cnf(tseitin \<phi>))" by (rule allE)
+      then have "eval \<alpha> (of_cnf(tseitin \<phi>)) \<longleftrightarrow> eval \<alpha> (of_cnf(tseitin2 \<phi> []))" by (rule sym)
+      from this and 6 and 7 show ?thesis by auto
+    qed
   qed
 qed
+
+lemma tseitin2_equisat:
+  "sat (of_cnf ([P \<phi>] # tseitin2 \<phi> [])) \<longleftrightarrow> sat \<phi>"
+proof -
+  have "sat (of_cnf ([P \<phi>] # tseitin2 \<phi> [])) \<longleftrightarrow> (\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin2 \<phi> [])))" 
+    unfolding sat_def ..
+  also have "... \<longleftrightarrow> (\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>)))" unfolding tseitin_eq_ex ..
+  also have "... \<longleftrightarrow> sat (of_cnf ([P \<phi>] # tseitin \<phi>))" unfolding sat_def ..
+  also have "... \<longleftrightarrow> sat \<phi>" unfolding tseitin_equisat ..
+  finally show ?thesis by auto
+qed
+
 
 subsection \<open>A Transformation due to Plaisted and Greenbaum\<close>
 
