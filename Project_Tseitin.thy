@@ -312,8 +312,7 @@ next
   from 3 and 5 and 7 and 9 show ?case by auto
 qed
 
-lemma tseitin2_concat2:
-  "tseitin2 \<phi> [] @ acc = tseitin2 \<phi> acc"  
+lemma tseitin2_concat2: "tseitin2 \<phi> [] @ acc = tseitin2 \<phi> acc"  
   by (rule sym, rule tseitin2_concat)
 
 lemma tseitin_equality: "eval \<alpha> (of_cnf(tseitin \<phi>)) \<longleftrightarrow> eval \<alpha> (of_cnf(tseitin2 \<phi> []))"
@@ -353,20 +352,32 @@ next
   finally show ?case by auto
 qed
 
+lemma tseitin_equality2: "eval \<alpha> (of_cnf(tseitin2 \<phi> [])) \<longleftrightarrow> eval \<alpha> (of_cnf(tseitin \<phi>))"
+  by (rule sym, rule tseitin_equality)
+
 lemma [simp]: "eval (eval \<alpha>) (of_cnf(tseitin2 \<phi> []))"
   sorry
 
 lemma [simp]: "eval \<alpha> \<phi> \<Longrightarrow> eval (eval \<alpha>) (of_cnf ([P \<phi>] # tseitin2 \<phi> []))"
   sorry
 
-lemma [simp]: 
-  assumes "eval v (of_cnf (tseitin2 \<phi> []))" 
-  shows "eval (v \<circ> Atm) \<phi> \<longleftrightarrow> v \<phi>"
-  sorry
-
 lemma tseitin2_equisat:
   "sat (of_cnf ([P \<phi>] # tseitin2 \<phi> [])) \<longleftrightarrow> sat \<phi>"
-  sorry
+proof (rule iffI)
+  assume 1: "sat (of_cnf ([P \<phi>] # tseitin2 \<phi> []))"
+  then show "sat \<phi>"
+    sorry
+next
+  assume 2: "sat \<phi>"
+  then show "sat (of_cnf ([P \<phi>] # tseitin2 \<phi> []))"
+  proof -
+    from \<open>sat \<phi>\<close>
+    have "\<exists>\<beta>. eval \<beta> \<phi>" by (simp add: sat_def)
+    then have "\<exists>\<beta>. eval (eval \<beta>) (of_cnf ([P \<phi>] # tseitin \<phi>))" by auto
+    then have "\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>))" by auto
+    then show ?thesis sorry
+  qed
+qed
 
 subsection \<open>A Transformation due to Plaisted and Greenbaum\<close>
 
