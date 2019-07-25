@@ -463,18 +463,17 @@ next
 next
   case IH: (Neg \<phi>)
   have "length (plaisted p (Neg \<phi>)) = length (plaisted (\<not>p) \<phi>)" by (cases p) auto
-  then have "length (plaisted p (Neg \<phi>)) \<le> 2 * size \<phi>" using IH by auto 
-  then show ?case by auto
+  also have "... \<le> 2 * size \<phi>" using IH by auto 
+  finally show ?case by auto
 next
   case IH: (Imp \<phi> \<psi>)
-  have 1: "length (plaisted p (Imp \<phi> \<psi>)) \<le> 2 + length (plaisted (\<not>p) \<phi>) + length (plaisted p \<psi>)"
+  have "length (plaisted p (Imp \<phi> \<psi>)) \<le> 2 + length (plaisted (\<not>p) \<phi>) + length (plaisted p \<psi>)"
     by (cases p) auto
-  have 2: "2 + length (plaisted (\<not>p) \<phi>) + length (plaisted p \<psi>) 
-              \<le> 2 + length (plaisted (\<not>p) \<phi>) + 2 * size \<psi>"
+  also have "... \<le> 2 + length (plaisted (\<not>p) \<phi>) + 2 * size \<psi>"
     using IH by auto
-  have "2 + length (plaisted (\<not>p) \<phi>) + 2 * size \<psi> \<le> 2 + 2 * size \<phi> + 2 * size \<psi>"
+  also have "... \<le> 2 + 2 * size \<phi> + 2 * size \<psi>"
     using IH by auto
-  from 1 and 2 and this show ?case by auto
+  finally show ?case by auto
 qed
 
 lemma plaisted_num_literals:
@@ -488,19 +487,18 @@ next
 next
   case IH: (Neg \<phi>)
   have "num_literals (plaisted p (Neg \<phi>)) = num_literals (plaisted (\<not>p) \<phi>)" by (cases p) auto
-  then have "num_literals (plaisted p (Neg \<phi>)) \<le> 4 * size \<phi>" using IH by auto 
-  then show ?case by auto
+  also have "... \<le> 4 * size \<phi>" using IH by auto 
+  finally show ?case by auto
 next
   case IH: (Imp \<phi> \<psi>)
-  have 1: "num_literals (plaisted p (Imp \<phi> \<psi>)) 
+  have "num_literals (plaisted p (Imp \<phi> \<psi>)) 
           \<le> 4 + num_literals (plaisted (\<not>p) \<phi>) + num_literals (plaisted p \<psi>)"
     by (cases p) auto
-  have 2: "4 + num_literals (plaisted (\<not>p) \<phi>) + num_literals (plaisted p \<psi>) 
-              \<le> 4 + num_literals (plaisted (\<not>p) \<phi>) + 4 * size \<psi>"
+  also have "... \<le> 4 + num_literals (plaisted (\<not>p) \<phi>) + 4 * size \<psi>"
     using IH by auto
-  have "4 + num_literals (plaisted (\<not>p) \<phi>) + 4 * size \<psi> \<le> 4 + 4 * size \<phi> + 4 * size \<psi>"
+  also have "... \<le> 4 + 4 * size \<phi> + 4 * size \<psi>"
     using IH by auto
-  from 1 and 2 and this show ?case by auto
+  finally show ?case by auto
 qed
 
 text \<open>
@@ -518,19 +516,16 @@ next
   then show ?case by auto
 next
   case IH: (Neg \<phi>)
-  have 1: "length (plaisted p (Neg \<phi>)) = length (plaisted (\<not>p) \<phi>)" by (cases p) auto
-  then have 2: "length (plaisted (\<not>p) \<phi>) \<le> length (tseitin \<phi>)" using IH by auto
-  from 1 and 2 show ?case by auto
+  have "length (plaisted p (Neg \<phi>)) = length (plaisted (\<not>p) \<phi>)" by (cases p) auto
+  also have "... \<le> length (tseitin \<phi>)" using IH by auto
+  finally show ?case by auto
 next
   case IH: (Imp \<phi> \<psi>)
-  have 1:
-    "length (plaisted p (Imp \<phi> \<psi>)) \<le> 2 + length (plaisted (\<not>p) \<phi>) + length (plaisted p \<psi>)"
+  have "length (plaisted p (Imp \<phi> \<psi>)) \<le> 2 + length (plaisted (\<not>p) \<phi>) + length (plaisted p \<psi>)"
     by (cases p) auto
-  have 2: "2 + length (plaisted (\<not>p) \<phi>) + length (plaisted p \<psi>)
-        \<le> 2 + length (plaisted (\<not>p) \<phi>) + length (tseitin \<psi>)" using IH by auto
-  have "2 + length (plaisted (\<not>p) \<phi>) + length (tseitin \<psi>)
-        \<le> 2 + length (tseitin \<phi>) + length (tseitin \<psi>)" using IH by auto
-  from 1 and 2 and this show ?case by auto
+  also have "... \<le> 2 + length (plaisted (\<not>p) \<phi>) + length (tseitin \<psi>)" using IH by auto
+  also have "... \<le> 2 + length (tseitin \<phi>) + length (tseitin \<psi>)" using IH by auto
+  finally show ?case by auto
 qed
 
 lemma plaisted_le_tseitin_num_literals:
@@ -543,20 +538,17 @@ next
   then show ?case by auto
 next
   case IH: (Neg \<phi>)
-  have 1: "num_literals (plaisted p (Neg \<phi>)) = num_literals (plaisted (\<not>p) \<phi>)" by (cases p) auto
-  then have 2: "num_literals (plaisted (\<not>p) \<phi>) \<le> num_literals (tseitin \<phi>)" using IH by auto
-  from 1 and 2 show ?case by auto
+  have "num_literals (plaisted p (Neg \<phi>)) = num_literals (plaisted (\<not>p) \<phi>)" by (cases p) auto
+  also have "... \<le> num_literals (tseitin \<phi>)" using IH by auto
+  finally show ?case by auto
 next
   case IH: (Imp \<phi> \<psi>)
-  have 1:
-    "num_literals (plaisted p (Imp \<phi> \<psi>)) 
+  have "num_literals (plaisted p (Imp \<phi> \<psi>)) 
           \<le> 4 + num_literals (plaisted (\<not>p) \<phi>) + num_literals (plaisted p \<psi>)"
     by (cases p) auto
-  have 2: "4 + num_literals (plaisted (\<not>p) \<phi>) + num_literals (plaisted p \<psi>)
-        \<le> 4 + num_literals (plaisted (\<not>p) \<phi>) + num_literals (tseitin \<psi>)" using IH by auto
-  have "4 + num_literals (plaisted (\<not>p) \<phi>) + num_literals (tseitin \<psi>)
-        \<le> 4 + num_literals (tseitin \<phi>) + num_literals (tseitin \<psi>)" using IH by auto
-  from 1 and 2 and this show ?case by auto
+  also have "... \<le> 4 + num_literals (plaisted (\<not>p) \<phi>) + num_literals (tseitin \<psi>)" using IH by auto
+  also have "... \<le> 4 + num_literals (tseitin \<phi>) + num_literals (tseitin \<psi>)" using IH by auto
+  finally show ?case by auto
 qed
 
 end
