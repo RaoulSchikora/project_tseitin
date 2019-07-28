@@ -6,7 +6,7 @@ but in general the CNF of a given formula may be exponentially larger, there is 
 in efficient transformations that produce a small equisatisfiable CNF for a given formula.
 Probably the earliest and most well-known of these transformation is due to Tseitin.
 
-In this project you will implement several transformations of propositional formulas
+In this project we will implement several transformations of propositional formulas
 into equisatisfiable CNFs and formally prove results about their complexity and that
 the resulting CNFs are indeed equisatisfiable to the original formula.
 \<close>
@@ -28,7 +28,7 @@ datatype 'a form =
   | Imp "'a form" "'a form" \<comment> \<open>implication\<close>
 
 text \<open>
-Define a function \<open>eval\<close> that evaluates the truth value of a formula with respect
+We define a function \<open>eval\<close> that evaluates the truth value of a formula with respect
 to a given truth assignment \<open>\<alpha> :: 'a \<Rightarrow> bool\<close>.
 \<close>
 fun eval :: "('a \<Rightarrow> bool) \<Rightarrow> 'a form \<Rightarrow> bool"
@@ -37,10 +37,9 @@ fun eval :: "('a \<Rightarrow> bool) \<Rightarrow> 'a form \<Rightarrow> bool"
   | "eval \<alpha> (Atm p) = \<alpha> p"
   | "eval \<alpha> (Neg \<phi>) = (\<not>(eval \<alpha> \<phi>))"
   | "eval \<alpha> (Imp \<phi> \<psi>) = ((\<not>(eval \<alpha> \<phi>)) \<or> eval \<alpha> \<psi>)"
-print_theorems
 
 text \<open>
-Define a predicate \<open>sat\<close> that captures satisfiable formulas.
+We define a predicate \<open>sat\<close> that captures satisfiable formulas.
 \<close>
 definition sat :: "'a form \<Rightarrow> bool"
   where
@@ -55,7 +54,7 @@ Literals are positive or negative atoms.
 datatype 'a literal = P 'a | N 'a
 
 text \<open>
-Function \<open>of_literals\<close> that turns a given literal (of @{typ "'a literal"}) into 
+We Implement a function \<open>of_literals\<close> that turns a given literal (of @{typ "'a literal"}) into 
 the corresponding formula (of @{typ "'a form"}).
 \<close>
 fun of_literal :: "'a literal \<Rightarrow> 'a form"
@@ -69,14 +68,13 @@ A clause is a disjunction of literals, represented as a list of literals.
 type_synonym 'a clause = "'a literal list"
 
 text \<open>
-Function \<open>of_clause\<close> that turns a given clause (of @{typ "'a clause"}) into an 
+We implement a function \<open>of_clause\<close> that turns a given clause (of @{typ "'a clause"}) into an 
 equivalent formula (of @{typ "'a form"}).
 \<close>
 fun of_clause :: "'a clause \<Rightarrow> 'a form"
   where
     "of_clause [] = Bot"
   | "of_clause (c # cs) = Imp (Neg (of_literal c)) (of_clause cs)"
-print_theorems
 
 text \<open>
 A CNF is a conjunction of clauses, represented as list of clauses.
@@ -84,10 +82,9 @@ A CNF is a conjunction of clauses, represented as list of clauses.
 type_synonym 'a cnf = "'a clause list"
 
 text \<open>
-Implement a function \<open>of_cnf\<close> that, given a CNF (of @{typ "'a cnf"}), computes
+We implement a function \<open>of_cnf\<close> that, given a CNF (of @{typ "'a cnf"}), computes
 a logically equivalent formula (of @{typ "'a form"}).
 \<close>
-
 fun of_cnf :: "'a cnf \<Rightarrow> 'a form"
   where
     "of_cnf [] = Neg Bot"
@@ -108,7 +105,7 @@ a label \<open>a\<^sub>\<phi>\<close> and use the following definitions
 to recursively compute clauses \<open>tseitin \<phi>\<close> such that \<open>a\<^sub>\<phi> \<and> tseitin \<phi>\<close> and \<open>\<phi>\<close>
 are equisatisfiable (that is, the former is satisfiable iff the latter is).
 
-Define a function \<open>tseitin\<close> that computes the clauses corresponding to the above idea.
+We define a function \<open>tseitin\<close> that computes the clauses corresponding to the above idea.
 \<close>           
 fun tseitin :: "'a form \<Rightarrow> ('a form) cnf"
   where
@@ -117,21 +114,26 @@ fun tseitin :: "'a form \<Rightarrow> ('a form) cnf"
   | "tseitin (Neg \<phi>) = [(N (Neg \<phi>)), (N \<phi>)] # [(P (Neg \<phi>)), (P \<phi>)] # tseitin \<phi>"
   | "tseitin (Imp \<phi> \<psi>) = [(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)] # [(P (Imp \<phi> \<psi>)), (P \<phi>)] 
                          # [(N \<psi>), (P (Imp \<phi> \<psi>))] # (tseitin \<phi> @ tseitin \<psi>)"
-print_theorems
 
 text \<open>
-Prove several lemmas on the way to the important prove of equisatisfiability between
-the function \<phi> and its tseitin transformation.
+We prove that the evaluation of the function {@const of_cnf} preserves list concatenation.
 \<close>
 lemma cnf_linear [simp]: "eval \<alpha> (of_cnf (xs @ ys)) = (eval \<alpha> (of_cnf xs) \<and> eval \<alpha> (of_cnf ys))"
   by (induction xs) auto
 
+text 
+\<open>We prove two lemmas that show, that the truth value of the tseitin transformation is always true 
+and not dependent on the truth value of the literal \<open>\<phi>\<close>
+\<close>
 lemma [simp]: "eval (eval \<alpha>) (of_cnf(tseitin \<phi>))"
   by (induction \<phi>) auto
 
 lemma [simp]: "eval \<alpha> \<phi> \<Longrightarrow> eval (eval \<alpha>) (of_cnf ([P \<phi>] # tseitin \<phi>))"
   by auto
 
+text \<open>
+We show that the structure preserving translation to clause form is consistency preserving.
+\<close>
 lemma tseitin_consistent [simp]:
   assumes "eval v (of_cnf(tseitin \<phi>))"
   shows "eval (v \<circ> Atm) \<phi> \<longleftrightarrow> v \<phi>"
@@ -164,7 +166,7 @@ next
 qed
 
 text \<open>
-Prove that \<open>a\<^sub>\<phi> \<and> tseitin \<phi>\<close> and \<open>\<phi>\<close> are equisatisfiable.
+Finally we prove that \<open>a\<^sub>\<phi> \<and> tseitin \<phi>\<close> and \<open>\<phi>\<close> are equisatisfiable.
 \<close>
 lemma tseitin_equisat:
   "sat (of_cnf ([P \<phi>] # tseitin \<phi>)) \<longleftrightarrow> sat \<phi>"
@@ -191,32 +193,37 @@ next
 qed
 
 text \<open>
-Prove a linear bound on the number of clauses:
+We prove a linear bound on the number of clauses:
 \<close>
 lemma tseitin_num_clauses:
   "length (tseitin \<phi>) \<le> 3 * size \<phi>"
   by (induction \<phi>) auto
 
 text \<open>
-Prove a linear bound on the number of literals:
+We implement a function counting the literals:
 \<close>
 fun num_literals :: "('a form) cnf \<Rightarrow> nat"
   where
     "num_literals [] = 0"
   | "num_literals (c # cs) = length c + num_literals cs"
 
+text \<open>
+We show that the function {@const num_literals} preserves list concatenation:
+\<close>
 lemma num_literals_add [simp]:
 "num_literals (xs @ ys) = num_literals xs + num_literals ys"
   by (induction xs) auto
 
+text \<open>
+Then, we show a linear bound on the number of literals
+\<close>
 lemma tseitin_num_literals:
   "num_literals (tseitin \<phi>) \<le> 7 * size \<phi>"
   by (induction \<phi>) auto
 
 text \<open>
-Implement a function \<open>t_tseitin\<close> that computes the number of recursive calls of your
-earlier definition of @{const tseitin} and prove a linear bound in the size of the formula
-(by suitably replacing \<open>n\<close>):
+We implement a function \<open>t_tseitin\<close> that computes the number of recursive calls of our
+earlier definition of @{const tseitin} and prove a linear bound in the size of the formula:
 \<close>
 fun t_tseitin :: "'a form \<Rightarrow> nat"
   where
@@ -231,7 +238,7 @@ lemma tseitin_linear:
   by (induction \<phi>) auto
 
 text \<open>
-Implement a tail recursive variant of @{const tseitin} and prove the lemma below:
+We implement a tail recursive variant of @{const tseitin}:
 \<close>
 fun tseitin2 :: "'a form \<Rightarrow> ('a form) cnf \<Rightarrow> ('a form) cnf"
   where
@@ -242,8 +249,9 @@ fun tseitin2 :: "'a form \<Rightarrow> ('a form) cnf \<Rightarrow> ('a form) cnf
   | "tseitin2 (Imp \<phi> \<psi>) acc
           = tseitin2 \<psi> (tseitin2 \<phi> ([(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)] # [(P (Imp \<phi> \<psi>)), (P \<phi>)] 
                          # [(N \<psi>), (P (Imp \<phi> \<psi>))] # acc))"
-print_theorems
 
+text \<open>
+We show that we can also append the \<close>
 lemma tseitin2_concat:
   "tseitin2 \<phi> acc = tseitin2 \<phi> [] @ acc"
 proof (induction \<phi> arbitrary: acc)
@@ -259,7 +267,7 @@ next
     by auto
   from 1 have 3: "tseitin2 \<phi> ([(N (Neg \<phi>)), (N \<phi>)] # [(P (Neg \<phi>)), (P \<phi>)] # acc)
           = (tseitin2 \<phi> []) @ [(N (Neg \<phi>)), (N \<phi>)] # [(P (Neg \<phi>)), (P \<phi>)] # acc" by (rule allE)
-  have 4: "(tseitin2 \<phi> []) @ [(N (Neg \<phi>)), (N \<phi>)] # [(P (Neg \<phi>)), (P \<phi>)] # acc
+  also have 4: "...
           = ((tseitin2 \<phi> []) @ [(N (Neg \<phi>)), (N \<phi>)] # [[(P (Neg \<phi>)), (P \<phi>)]]) @ acc" by auto
   from 1 have 5: "(tseitin2 \<phi> ([(N (Neg \<phi>)), (N \<phi>)] # [[(P (Neg \<phi>)), (P \<phi>)]])) 
           = ((tseitin2 \<phi> []) @ [(N (Neg \<phi>)), (N \<phi>)] # [[(P (Neg \<phi>)), (P \<phi>)]])" 
@@ -432,13 +440,6 @@ next
   case False
   then show ?thesis by (induction \<phi>) auto
 qed
-
-lemma [simp]: "eval \<alpha> \<phi> \<Longrightarrow> eval (eval \<alpha>) (of_cnf ([P \<phi>] # plaisted p \<phi>))"
-  by auto
-
-value "eval \<alpha> (of_cnf(plaisted True Bot))"
-value "eval (\<alpha> \<circ> Atm) Bot"
-value "eval \<alpha> (of_cnf(plaisted p Bot))"
 
 lemma plaisted_consistent: "(\<alpha> \<phi> \<and> eval \<alpha> (of_cnf(plaisted True \<phi>)) \<longrightarrow> eval (\<alpha> \<circ> Atm) \<phi>)
           \<and> ((\<not>\<alpha> \<phi>) \<and> eval \<alpha> (of_cnf(plaisted False \<phi>)) \<longrightarrow> (\<not>eval (\<alpha> \<circ> Atm) \<phi>))"
