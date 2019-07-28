@@ -169,11 +169,10 @@ Prove that \<open>a\<^sub>\<phi> \<and> tseitin \<phi>\<close> and \<open>\<phi>
 lemma tseitin_equisat:
   "sat (of_cnf ([P \<phi>] # tseitin \<phi>)) \<longleftrightarrow> sat \<phi>"
 proof (rule iffI)
-  assume "sat (of_cnf ([P \<phi>] # tseitin \<phi>))"
+  assume 1: "sat (of_cnf ([P \<phi>] # tseitin \<phi>))"
   then show "sat \<phi>"
   proof -
-    from \<open>sat (of_cnf ([P \<phi>] # tseitin \<phi>))\<close>
-    have "\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>))" by (simp add: sat_def)
+    from 1 have "\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>))" by (simp add: sat_def)
     then have "\<exists>\<alpha>. (\<alpha> \<phi>) \<and> eval \<alpha> (of_cnf (tseitin \<phi>))" by auto
     then obtain \<alpha> where "\<alpha> \<phi>" and "eval \<alpha> (of_cnf (tseitin \<phi>))" by auto
     then have "eval (\<alpha> \<circ> Atm) \<phi>" by auto
@@ -181,11 +180,10 @@ proof (rule iffI)
     then show ?thesis by (simp add: sat_def)
   qed
 next
-  assume "sat \<phi>"
+  assume 2: "sat \<phi>"
   show "sat (of_cnf ([P \<phi>] # tseitin \<phi>))"
   proof -
-    from \<open>sat \<phi>\<close>
-    have "\<exists>\<beta>. eval \<beta> \<phi>" by (simp add: sat_def)
+    from 2 have "\<exists>\<beta>. eval \<beta> \<phi>" by (simp add: sat_def)
     then have "\<exists>\<beta>. eval (eval \<beta>) (of_cnf ([P \<phi>] # tseitin \<phi>))" by auto
     then have "\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>))" by auto
     then show ?thesis by (simp add: sat_def)
@@ -415,8 +413,8 @@ fun plaisted :: "bool \<Rightarrow> 'a form \<Rightarrow> ('a form) cnf"
   where
     "plaisted p Bot = [[N Bot]]"
   | "plaisted p (Atm \<phi>) = []"
-  | "plaisted True (Neg \<phi>) = plaisted False \<phi>"
-  | "plaisted False (Neg \<phi>) = plaisted True \<phi>"
+  | "plaisted True (Neg \<phi>) = [(N (Neg \<phi>)), (N \<phi>)] # plaisted False \<phi>"
+  | "plaisted False (Neg \<phi>) = [(P (Neg \<phi>)), (P \<phi>)] # plaisted True \<phi>"
   | "plaisted True (Imp \<phi> \<psi>) = [(N (Imp \<phi> \<psi>)), (N \<phi>), (P \<psi>)] 
                                 # (plaisted False \<phi> @ plaisted True \<psi>)"
   | "plaisted False (Imp \<phi> \<psi>) = [(P (Imp \<phi> \<psi>)), (P \<phi>)] # [(N \<psi>), (P (Imp \<phi> \<psi>))]
@@ -438,14 +436,41 @@ qed
 lemma [simp]: "eval \<alpha> \<phi> \<Longrightarrow> eval (eval \<alpha>) (of_cnf ([P \<phi>] # plaisted p \<phi>))"
   by auto
 
-lemma [simp]: 
-  assumes "eval v (of_cnf (plaisted True \<phi>))" 
-  shows "eval (v \<circ> Atm) \<phi> \<longleftrightarrow> v \<phi>"
-  sorry
+value "eval \<alpha> (of_cnf(plaisted True Bot))"
+value "eval (\<alpha> \<circ> Atm) Bot"
+value "eval \<alpha> (of_cnf(plaisted p Bot))"
+
+lemma plaisted_consistent: "(\<alpha> \<phi> \<and> eval \<alpha> (of_cnf(plaisted True \<phi>)) \<longrightarrow> eval (\<alpha> \<circ> Atm) \<phi>)
+          \<and> ((\<not>\<alpha> \<phi>) \<and> eval \<alpha> (of_cnf(plaisted False \<phi>)) \<longrightarrow> (\<not>eval (\<alpha> \<circ> Atm) \<phi>))"
+  by (induction \<phi>) auto
 
 lemma plaisted_equisat:
   "sat (of_cnf ([P \<phi>] # plaisted True \<phi>)) \<longleftrightarrow> sat \<phi>"
-  sorry
+proof (rule iffI)
+  assume 1: "sat (of_cnf ([P \<phi>] # plaisted True \<phi>))"
+  show "sat \<phi>"
+  proof -
+    from 1 have "\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # plaisted True \<phi>))" by (simp add: sat_def)
+    then have "\<exists>\<alpha>. (\<alpha> \<phi>) \<and> eval \<alpha> (of_cnf (plaisted True \<phi>))" by auto
+    then obtain \<alpha> where 2: "\<alpha> \<phi> \<and> eval \<alpha> (of_cnf (plaisted True \<phi>))" by auto
+    have "(\<alpha> \<phi> \<and> eval \<alpha> (of_cnf(plaisted True \<phi>)) \<longrightarrow> eval (\<alpha> \<circ> Atm) \<phi>)
+          \<and> ((\<not>\<alpha> \<phi>) \<and> eval \<alpha> (of_cnf(plaisted False \<phi>)) \<longrightarrow> (\<not>eval (\<alpha> \<circ> Atm) \<phi>))" 
+      by (rule plaisted_consistent)
+    then have "(\<alpha> \<phi> \<and> eval \<alpha> (of_cnf(plaisted True \<phi>)) \<longrightarrow> eval (\<alpha> \<circ> Atm) \<phi>)" by auto
+    from this and 2 have "eval (\<alpha> \<circ> Atm) \<phi>" by (rule mp)
+    then have "\<exists>\<beta>. eval \<beta> \<phi>" by auto
+    then show ?thesis by (simp add: sat_def)
+  qed
+next
+  assume 2: "sat \<phi>"
+  show "sat (of_cnf ([P \<phi>] # plaisted True \<phi>))"
+  proof -
+    from 2 have "\<exists>\<beta>. eval \<beta> \<phi>" by (simp add: sat_def)
+    then have "\<exists>\<beta>. eval (eval \<beta>) (of_cnf ([P \<phi>] # plaisted True \<phi>))" by auto
+    then have "\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # plaisted True \<phi>))" by auto
+    then show ?thesis by (simp add: sat_def)
+  qed
+qed
 
 text \<open>
 Prove linear bounds on the number of clauses and literals by suitably
@@ -462,8 +487,8 @@ next
   then show ?case by auto
 next
   case IH: (Neg \<phi>)
-  have "length (plaisted p (Neg \<phi>)) = length (plaisted (\<not>p) \<phi>)" by (cases p) auto
-  also have "... \<le> 2 * size \<phi>" using IH by auto 
+  have "length (plaisted p (Neg \<phi>)) = 1 + length (plaisted (\<not>p) \<phi>)" by (cases p) auto
+  also have "... \<le> 1 + 2 * size \<phi>" using IH by auto 
   finally show ?case by auto
 next
   case IH: (Imp \<phi> \<psi>)
@@ -486,8 +511,8 @@ next
   then show ?case by auto
 next
   case IH: (Neg \<phi>)
-  have "num_literals (plaisted p (Neg \<phi>)) = num_literals (plaisted (\<not>p) \<phi>)" by (cases p) auto
-  also have "... \<le> 4 * size \<phi>" using IH by auto 
+  have "num_literals (plaisted p (Neg \<phi>)) = 2 + num_literals (plaisted (\<not>p) \<phi>)" by (cases p) auto
+  also have "... \<le> 2 + 4 * size \<phi>" using IH by auto 
   finally show ?case by auto
 next
   case IH: (Imp \<phi> \<psi>)
@@ -516,8 +541,8 @@ next
   then show ?case by auto
 next
   case IH: (Neg \<phi>)
-  have "length (plaisted p (Neg \<phi>)) = length (plaisted (\<not>p) \<phi>)" by (cases p) auto
-  also have "... \<le> length (tseitin \<phi>)" using IH by auto
+  have "length (plaisted p (Neg \<phi>)) = 1 + length (plaisted (\<not>p) \<phi>)" by (cases p) auto
+  also have "... \<le> 1 + length (tseitin \<phi>)" using IH by auto
   finally show ?case by auto
 next
   case IH: (Imp \<phi> \<psi>)
@@ -538,8 +563,8 @@ next
   then show ?case by auto
 next
   case IH: (Neg \<phi>)
-  have "num_literals (plaisted p (Neg \<phi>)) = num_literals (plaisted (\<not>p) \<phi>)" by (cases p) auto
-  also have "... \<le> num_literals (tseitin \<phi>)" using IH by auto
+  have "num_literals (plaisted p (Neg \<phi>)) = 2 + num_literals (plaisted (\<not>p) \<phi>)" by (cases p) auto
+  also have "... \<le> 2 + num_literals (tseitin \<phi>)" using IH by auto
   finally show ?case by auto
 next
   case IH: (Imp \<phi> \<psi>)
