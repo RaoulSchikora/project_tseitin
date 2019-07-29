@@ -251,7 +251,8 @@ fun tseitin2 :: "'a form \<Rightarrow> ('a form) cnf \<Rightarrow> ('a form) cnf
                          # [(N \<psi>), (P (Imp \<phi> \<psi>))] # acc))"
 
 text \<open>
-We show that we can also append the \<close>
+We show that we can also append the accumulator instead of using it as an argument
+\<close>
 lemma tseitin2_concat:
   "tseitin2 \<phi> acc = tseitin2 \<phi> [] @ acc"
 proof (induction \<phi> arbitrary: acc)
@@ -318,14 +319,16 @@ next
   from 3 and 5 and 7 and 9 show ?case by auto
 qed
 
+text \<open>
+And we prove the symmetric case of the lemma above.
+\<close>
 lemma tseitin2_concat2: "tseitin2 \<phi> [] @ acc = tseitin2 \<phi> acc"  
   by (rule sym, rule tseitin2_concat)
 
 text \<open>
-In the following lemma, we prove that the evaluation of the tseitin function in normal recursion is exactly 
-the same as the evaluation of the tseitin function using tail recursion technique.
+In the following lemma, we prove that the evaluation of {@const tseitin} is the same as the 
+evaluation of the {@const tseitin2} using tail recursion technique.
 \<close>
-
 lemma tseitin_equality: "eval \<alpha> (of_cnf(tseitin \<phi>)) \<longleftrightarrow> eval \<alpha> (of_cnf(tseitin2 \<phi> []))"
 proof (induction \<phi>)
   case Bot
@@ -363,12 +366,16 @@ next
   finally show ?case by auto
 qed
 
+text \<open>
+And we prove the symmetric case of the lemma above.
+\<close>
 lemma tseitin_equality2: "eval \<alpha> (of_cnf(tseitin2 \<phi> [])) \<longleftrightarrow> eval \<alpha> (of_cnf(tseitin \<phi>))"
   by (rule sym, rule tseitin_equality)
 
-text \<open>Then, we prove that for all formulas \<phi> that evaluated by tseitin transformation, it has
-the same evaulation using tail recursive transformation
- \<close>
+text \<open>
+Then, we prove that for all formulas \<open>\<phi>\<close> it holds, that evaluating it by the tseitin 
+transformation, is equivalent to evaluation using the tail recursive transformation:
+\<close>
 lemma tseitin_eq_for_all: "\<forall>\<alpha>. (eval \<alpha> (of_cnf(tseitin2 \<phi> [])) \<longleftrightarrow> eval \<alpha> (of_cnf(tseitin \<phi>)))"
 proof -
   have "\<And>\<alpha>. eval \<alpha> (of_cnf (tseitin2 \<phi> [])) \<longleftrightarrow> eval \<alpha> (of_cnf (tseitin \<phi>))"
@@ -376,6 +383,9 @@ proof -
   then show ?thesis by auto
 qed
 
+text \<open>
+We then show that the equivalence also holds for the existential quantifier, which is needed later.
+\<close>
 lemma tseitin_eq_ex:
  "(\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin2 \<phi> []))) \<longleftrightarrow> (\<exists>\<alpha>. eval \<alpha> (of_cnf ([P \<phi>] # tseitin \<phi>)))"
 proof -
@@ -403,7 +413,7 @@ proof -
 qed
 
 text \<open>
-Finally we prove that the \<open>tseitin2 \<phi>\<close> formula  and \<open>\<phi>\<close> are equisatisfiable.
+Finally we prove that \<open>a\<^sub>\<phi> \<and> tseitin2 \<phi>\<close> and \<open>\<phi>\<close> are equisatisfiable.
 \<close>
 lemma tseitin2_equisat:
   "sat (of_cnf ([P \<phi>] # tseitin2 \<phi> [])) \<longleftrightarrow> sat \<phi>"
@@ -425,8 +435,8 @@ to reduce the number of clauses and literals needed for an equisatisfiable CNF.
 Here, the polarity at the root is positive and it flips whenever we move down to the (first)
 argument of a(n) negation (implication).
 
-Implement a variant \<open>plaisted\<close> of @{const tseitin} that takes the polarity of subformulas
-into account and prove that \<open>a\<^sub>\<phi> \<and> plaisted True \<phi>\<close> and \<open>\<phi>\<close> are equisatisfiable.
+We implement a variant \<open>plaisted\<close> of @{const tseitin} that takes the polarity of subformulas
+into account.
 \<close>
 fun plaisted :: "bool \<Rightarrow> 'a form \<Rightarrow> ('a form) cnf"
   where
@@ -439,7 +449,9 @@ fun plaisted :: "bool \<Rightarrow> 'a form \<Rightarrow> ('a form) cnf"
   | "plaisted False (Imp \<phi> \<psi>) = [(P (Imp \<phi> \<psi>)), (P \<phi>)] # [(N \<psi>), (P (Imp \<phi> \<psi>))]
                                 # (plaisted True \<phi> @ plaisted False \<psi>)"
 
-
+text \<open>
+We show two auxiliary lemmas:
+\<close>
 lemma [simp]: 
   "eval (eval \<alpha>) (of_cnf(plaisted True \<phi>)) \<longleftrightarrow> eval (eval \<alpha>) (of_cnf(plaisted False \<phi>))"
   by (induction \<phi>) auto
@@ -455,14 +467,14 @@ qed
 
 text \<open>
 We show that the structure preserving translation to clause form is consistency preserving 
-for plaisted transformation.
+for {@const plaisted}.
 \<close>
 lemma plaisted_consistent: "(\<alpha> \<phi> \<and> eval \<alpha> (of_cnf(plaisted True \<phi>)) \<longrightarrow> eval (\<alpha> \<circ> Atm) \<phi>)
           \<and> ((\<not>\<alpha> \<phi>) \<and> eval \<alpha> (of_cnf(plaisted False \<phi>)) \<longrightarrow> (\<not>eval (\<alpha> \<circ> Atm) \<phi>))"
   by (induction \<phi>) auto
 
 text \<open>
-We prove that the \<open>plaisted \<phi>\<close> formula  and \<open>\<phi>\<close> are equisatisfiable.
+We prove that \<open>a\<^sub>\<phi> \<and> plaisted \<phi>\<close> and \<open>\<phi>\<close> are equisatisfiable.
 \<close>
 lemma plaisted_equisat:
   "sat (of_cnf ([P \<phi>] # plaisted True \<phi>)) \<longleftrightarrow> sat \<phi>"
@@ -493,10 +505,8 @@ next
 qed
 
 text \<open>
-Prove linear bounds on the number of clauses and literals by suitably
-replacing \<open>n\<close> and \<open>num_literals\<close> below:
+We prove linear bounds on the number of clauses of {@const plaisted}:
 \<close>
-
 lemma plaisted_num_clauses:
   "length (plaisted p \<phi>) \<le> 2 * size \<phi>"
 proof (induction \<phi> arbitrary: p)
@@ -520,8 +530,9 @@ next
     using IH by auto
   finally show ?case by auto
 qed
+
 text \<open>
-We show a linear bound on the number of literals for plaisted transformation.
+We show a linear bound on the number of literals for {@const plaisted}.
 \<close>
 lemma plaisted_num_literals:
   "num_literals (plaisted p \<phi>) \<le> 4 * size \<phi>"
@@ -549,10 +560,9 @@ next
 qed
 
 text \<open>
-Prove that with respect to the number of literals and clauses in the resulting CNF,
+We prove that with respect to the number of clauses and literals in the resulting CNF,
 @{const plaisted} is at least as good as @{const tseitin}.
 \<close>
-
 lemma plaisted_le_tseitin_num_clauses:
   "length (plaisted p \<phi>) \<le> length (tseitin \<phi>)"
 proof (induction \<phi> arbitrary: p)
