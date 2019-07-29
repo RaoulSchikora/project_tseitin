@@ -321,6 +321,11 @@ qed
 lemma tseitin2_concat2: "tseitin2 \<phi> [] @ acc = tseitin2 \<phi> acc"  
   by (rule sym, rule tseitin2_concat)
 
+text \<open>
+In the following lemma, we prove that the evaluation of the tseitin function in normal recursion is exactly 
+the same as the evaluation of the tseitin function using tail recursion technique.
+\<close>
+
 lemma tseitin_equality: "eval \<alpha> (of_cnf(tseitin \<phi>)) \<longleftrightarrow> eval \<alpha> (of_cnf(tseitin2 \<phi> []))"
 proof (induction \<phi>)
   case Bot
@@ -361,6 +366,9 @@ qed
 lemma tseitin_equality2: "eval \<alpha> (of_cnf(tseitin2 \<phi> [])) \<longleftrightarrow> eval \<alpha> (of_cnf(tseitin \<phi>))"
   by (rule sym, rule tseitin_equality)
 
+text \<open>Then, we prove that for all formulas \<phi> that evaluated by tseitin transformation, it has
+the same evaulation using tail recursive transformation
+ \<close>
 lemma tseitin_eq_for_all: "\<forall>\<alpha>. (eval \<alpha> (of_cnf(tseitin2 \<phi> [])) \<longleftrightarrow> eval \<alpha> (of_cnf(tseitin \<phi>)))"
 proof -
   have "\<And>\<alpha>. eval \<alpha> (of_cnf (tseitin2 \<phi> [])) \<longleftrightarrow> eval \<alpha> (of_cnf (tseitin \<phi>))"
@@ -394,6 +402,9 @@ proof -
   qed
 qed
 
+text \<open>
+Finally we prove that the \<open>tseitin2 \<phi>\<close> formula  and \<open>\<phi>\<close> are equisatisfiable.
+\<close>
 lemma tseitin2_equisat:
   "sat (of_cnf ([P \<phi>] # tseitin2 \<phi> [])) \<longleftrightarrow> sat \<phi>"
 proof -
@@ -428,6 +439,7 @@ fun plaisted :: "bool \<Rightarrow> 'a form \<Rightarrow> ('a form) cnf"
   | "plaisted False (Imp \<phi> \<psi>) = [(P (Imp \<phi> \<psi>)), (P \<phi>)] # [(N \<psi>), (P (Imp \<phi> \<psi>))]
                                 # (plaisted True \<phi> @ plaisted False \<psi>)"
 
+
 lemma [simp]: 
   "eval (eval \<alpha>) (of_cnf(plaisted True \<phi>)) \<longleftrightarrow> eval (eval \<alpha>) (of_cnf(plaisted False \<phi>))"
   by (induction \<phi>) auto
@@ -441,10 +453,17 @@ next
   then show ?thesis by (induction \<phi>) auto
 qed
 
+text \<open>
+We show that the structure preserving translation to clause form is consistency preserving 
+for plaisted transformation.
+\<close>
 lemma plaisted_consistent: "(\<alpha> \<phi> \<and> eval \<alpha> (of_cnf(plaisted True \<phi>)) \<longrightarrow> eval (\<alpha> \<circ> Atm) \<phi>)
           \<and> ((\<not>\<alpha> \<phi>) \<and> eval \<alpha> (of_cnf(plaisted False \<phi>)) \<longrightarrow> (\<not>eval (\<alpha> \<circ> Atm) \<phi>))"
   by (induction \<phi>) auto
 
+text \<open>
+We prove that the \<open>plaisted \<phi>\<close> formula  and \<open>\<phi>\<close> are equisatisfiable.
+\<close>
 lemma plaisted_equisat:
   "sat (of_cnf ([P \<phi>] # plaisted True \<phi>)) \<longleftrightarrow> sat \<phi>"
 proof (rule iffI)
@@ -501,7 +520,9 @@ next
     using IH by auto
   finally show ?case by auto
 qed
-
+text \<open>
+We show a linear bound on the number of literals for plaisted transformation.
+\<close>
 lemma plaisted_num_literals:
   "num_literals (plaisted p \<phi>) \<le> 4 * size \<phi>"
 proof (induction \<phi> arbitrary: p)
