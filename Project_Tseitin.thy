@@ -9,7 +9,10 @@ Probably the earliest and most well-known of these transformation is due to Tsei
 In this project we will implement several transformations of propositional formulas
 into equisatisfiable CNFs and formally prove results about their complexity and that
 the resulting CNFs are indeed equisatisfiable to the original formula.
-\<close>
+
+Authors:
+Schikora, Raoul raoul.schikora@student.uibk.ac.at
+Zakieldin, Kamal kamal.zakieldin@student.uibk.ac.at\<close>
 
 theory Project_Tseitin
   imports Main
